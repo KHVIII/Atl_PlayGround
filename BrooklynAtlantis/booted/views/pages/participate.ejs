@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <script src="scripts/participate.js" type="text/javascript"></script>
+  <style>
+    #YTplayer {
+      max-width: 513px;
+      max-height: 288.6px;
+    }
+    .content {
+      max-width: 513px;
+    }
+    @media (max-width: 500px) {
+      #YTplayer {
+        max-width: 352px;
+        max-height: 200px;
+      }
+      .content {
+        max-width: 352px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      #YTplayer {
+        max-width: 673px;
+        max-height: 378.6px;
+      }
+      .content {
+        max-width: 673px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      #YTplayer {
+        max-width: 833px;
+        max-height: 468.6px;
+      }
+      .content {
+        max-width: 833px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <div style="text-align:center; margin: 0 auto;"><div id="YTplayer"></div></div>
+    <div class="container content">
+      <h1>How to participate</h1>
+      <div id='hiddenp' style='display: none;'>
+        <p><b>When you click the button below, you will be directed to sign up/log in (if you haven't done so yet), followed by the practice session.</b></p>
+        
+        <div id="button-container" style="margin: 0 auto; text-align:center;">
+          <a style="text-decoration:none;" href="/practice"><button id="continue">Continue</button></a><br>
+        </div>
+      </div>
+      <p>We need your help to understand the environmental health of the Gowanus Canal. All you need to do is look at the image taken by our aquatic robot and classify objects in the images as "<b>threat</b>" or "<b>no threat</b>" to the water quality or wildlife. This makes you a citizen scientist!<br><br>To continue, please watch the video above to learn more about the Gowanus Canal and our project. <b>After the video, the button to proceed will appear just below the video.</b></p>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

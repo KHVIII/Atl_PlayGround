@@ -1,0 +1,17 @@
+June 23:
+1. Before anything, set up the trial page and the friends page (blanks) so at least there's something after home page. 
+2. set up a test page where you just get automatically get marked as isAuthenticated and a test page where you sign out as well
+	after this is set up, test out the two versions of the web page. Cannot test properly right now without being able to log on. 
+3.alternative is to ask them if I can see the mysql table if i cant manually set isAuthenticated 
+Misc. also need to change regis/login so whenever it's down it leads you to the Profile page. 
+
+
+jun 24:
+1. Change Contacts to Contact
+   Change Profile to My Profile 
+2. Change the loggedIn layout to My Profile | Past Studies | About | Contact
+3. Show User information somewhere on the my profile page
+4. start working on the ability to change user information.
+
+5. For friday, have name shown and ability to change name. 
+6. check how to do email authentication 

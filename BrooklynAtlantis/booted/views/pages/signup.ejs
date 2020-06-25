@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+    <style>
+    .content {
+      max-width: 513px;
+    }
+    @media (max-width: 500px) {
+      .content {
+        max-width: 352px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .content {
+        max-width: 384;
+      }
+    }
+
+     #login {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
+    #termsCheck {
+      margin-top: 5px;
+    }
+
+    #ageCheck {
+      margin-bottom: 0px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <%- include('../partials/main-jumbotron') %>
+    <div class="container content">
+      <h1 style="margin-left: auto;">Sign Up</h1>
+      <div style="text-align:center; position: relative; max-width:384px; margin: 0 auto;">
+        <% if (errmsg) {%>
+          <p> <%= errmsg %> </p>
+        <% } %>
+        <div style="border-left: 1px solid #eee; width: 1px; position: absolute; left: 45px; height: 100%;"></div>
+       </div>
+      <br>
+      <form action='/signup' method='POST' style="max-width:384px; margin: 0 auto;">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" class="form-control" name="email" id="email" placeholder="Enter email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" class="form-control" name="password" id="password" placeholder="Enter password" required>
+        </div>
+        <div class="form-group">
+          <label for="confirm">Confirm Password</label>
+          <input type="password" class="form-control" name="confirm" id="confirm" placeholder="Confirm password" required>
+        </div>
+        <div class="form-check">
+          <label class="form-check-label" id="ageCheck">
+            <input type="checkbox" class="form-check-input" name="age" required>
+            I am over 18 years old.
+          </label><br>
+          <small id="ageHelp" class="form-text text-muted">You must be over 18 to participate.</small><br>
+          <label class="form-check-label" id="termsCheck" >
+            <input type="checkbox" class="form-check-input" name="terms" required>
+             I agree to the <u><a href="consent.html" target="_blank" style="color:#00e">terms of consent</a></u>.
+          </label>
+        </div>
+
+        <br>
+        <div style="text-align:center">
+          <button type="submit" id="login";">Sign up</button>
+        </div>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

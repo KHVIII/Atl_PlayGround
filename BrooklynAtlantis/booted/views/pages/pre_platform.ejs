@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <%- include('../partials/platform-style') %>
+</head>
+<body>
+  <header>
+    <%- include('../partials/platform-head') %>
+  </header>
+  <main>
+    <div class="container content">
+      <p style='font-size: 1.5em; padding-top: 50px; text-align: center'>This is the end of the practice.<br>
+You are about to classify 31 images.<br><br>Each image will be shown for 5 seconds, and you will be able to change your answer in the given time.<br><br>
+Not sure if it is a threat or not?<br>
+Then select "I don't know".<br><br>
+Are you ready?</p>
+    </div>
+<div style='text-align: center;'>
+  <a href="platform"><img id='next2' src="images/next.png"></a>
+</div>
+  </main>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

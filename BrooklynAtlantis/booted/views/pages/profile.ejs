@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <style>
+      .content {
+      max-width: 513px;
+    }
+    @media (max-width: 500px) {
+      .content {
+        max-width: 352px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .content {
+        max-width: 768px;
+      }
+    }#buttons {
+      background-color: #57068c;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <%- include('../partials/main-jumbotron') %>
+    <div class="container content" style="text-align:center">
+      <h1>Profile</h1> 
+      <p>Welcome to your profile. Please select from one of the following activities below. </p>
+        <form action='/tag', style="max-width:384px; margin: 0 auto;"> <!-- /tag is not yet implemented-->
+            <div>
+                <button type="submit" id="buttons">Tag Pictures</button>
+            </div>
+        </form>
+        <form action='/edit', style="max-width:384px; margin: 0 auto;"> <!-- /Edit is not yet implemented-->
+            <div>
+                <button type="submit" id="buttons">Edit your profile</button>
+            </div>
+        </form>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

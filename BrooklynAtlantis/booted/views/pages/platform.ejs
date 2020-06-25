@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <%- include('../partials/platform-style') %>
+  <script type="text/javascript" src="scripts/countdown.js"></script>
+</head>
+<body>
+  <header>
+    <%- include('../partials/platform-head') %>
+  </header>
+  <main>
+    <div class="container content unselectable">
+      <div class='middle' id="image-wrapper"></div>
+      <div class='radio'>
+        <form action="action_page.php">
+          <input id="radio_threat" type="radio" name="answer" value="threat">
+          <label class="radio_label" for="radio_threat"><span id="yes">Threat</span></label>
+          <input id="radio_dontknow" type="radio" name="answer" value="dontknow">
+          <label class="radio_label" for="radio_dontknow"><span id="dontknow">I don't know</span></label>
+          <input id="radio_no_threat" type="radio" name="answer" value="no_threat">
+          <label class='radio_label' for="radio_no_threat"><span id="no">No Threat</span></label>
+        </form>
+        <p id='checker'>&#10003;</p>
+      </div>
+      <div class='bottom'>
+        <span id="countdown"></span>
+      </div>
+
+      <div id='progressContainer'>
+        <div id='progress'></div>
+        <div id='percentage'>0%</div>
+      </div>
+    </div>
+  </main>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

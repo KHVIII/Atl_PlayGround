@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <%- include('../partials/main-jumbotron') %>
+    <div class="container content" style="max-width: 768px;">
+      <h1>Past Studies</h1>
+      <p>Here is a list of past studies: </p>
+        <ul style="list-style: none; color:#0981A7">
+          <li><b>Study 1</b><br>
+              blah blah blah blah blah<br>
+          </li>
+          <li><b>Study 2</b><br>
+              bleh bleh bleh bleh bleh<br>
+          </li>
+        </ul> <br>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

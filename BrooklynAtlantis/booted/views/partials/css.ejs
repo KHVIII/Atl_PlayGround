@@ -1,0 +1,111 @@
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<style>
+  @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+  body { 
+    font-family:'Open Sans', Helvetica, Arial, sans-serif;
+    padding-top:50px;
+    background-color: #f5f5f5;
+  }
+  .unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  .jumbotron {
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
+    background-color: #f5f5f5;
+  }
+  .navbar-brand, h1 {
+    color: #57068C !important;
+  }
+
+  .content {
+    min-height: calc(100vh - 60px - 160.3px);
+    color: #0981A7;
+  }
+
+  .jumbo-main {
+    margin: 0 auto;
+    background-image: url("images/main.png");
+    background-size: 100% 100%; 
+    color: #eee;
+    max-width: 513px;
+    height: 160.3px;
+    position: relative;
+  }
+
+  .jumbo-main p {
+    position: absolute;
+    bottom: 0;
+    right: 3%;
+  }
+
+  footer {
+    text-align: right;
+  }
+
+  footer img {
+    vertical-align: right;
+    padding-left: 20px;
+  }
+
+  .content {
+    text-align: left;
+  }
+
+  @media (min-width: 768px) {
+    main {
+      margin: 0 auto;
+      max-width: 768px;
+      text-align: center;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .jumbo-main {
+      height: 240px;
+      max-width: 768px;
+    }
+  }
+  /* Responsive: Portrait tablets and up */
+  @media screen and (min-width: 768px) {
+    /* Remove the padding we set earlier */
+    .header,
+    .marketing,
+    .footer {
+      padding-right: 0;
+      padding-left: 0;
+    }
+    /* Space out the masthead */
+    .header {
+      margin-bottom: 30px;
+    }
+    /* Remove the bottom border on the jumbotron for visual effect */
+    .jumbotron {
+      border-bottom: 0;
+    }
+  }
+
+  @media (min-width: 992px) {
+    main {
+      max-width: 920px;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    main {
+      max-width: 1140px;
+    }
+  }
+  #continue, #showAnswer, #submit {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+
+</style>

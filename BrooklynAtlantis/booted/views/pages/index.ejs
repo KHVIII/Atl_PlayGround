@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<% include ../partials/head %>
+  <% include ../partials/css %>
+    <style>
+    .content {
+      max-width: 513px;
+    }
+    @media (max-width: 500px) {
+      .content {
+        max-width: 352px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .content {
+        max-width: 768px;
+      }
+    }
+    #participate {
+      background-color: #57068c;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <%- include('../partials/main-jumbotron') %>
+    <div class="container content">
+      <h1>About</h1>
+      <p>The Brooklyn Atlantis citizen science project focuses on environmental monitoring of the Gowanus Canal (Brooklyn, NY), one of the most polluted water bodies in the US. In order to understand the environmental health of the canal, our team at the Engineering Department in NYU developed an Aquatic Robotic Vehicle (ARV), which is capable to navigate along the water.<br><br>The Robot takes images and collect data about water quality, such as pH, temperature, dissolved oxygen and conductivity. The analysis of the captured images and environmental parameters, together with the GPS location, helps us to understand where are the more threatened areas, and where we should start a clean-up. <br><br>You can take part in this scientific project and help us improve the Gowanus Canal.</p>
+      <% if (auth == 0 ) { %> 
+      <form action='/participate', style="max-width:384px; margin: 0 auto;">
+        <div style="text-align:center">
+          <button type="submit" id="participate">I'd like to sign up and participate!</button>
+        </div>
+      </form>
+      <% } else { %>
+      <form action='/profile', style="max-width:384px; margin: 0 auto;">
+        <div style="text-align:center">
+          <button type="submit" id="participate">Go to my profile page and start tagging!</button>
+      <% } %>
+        </div>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

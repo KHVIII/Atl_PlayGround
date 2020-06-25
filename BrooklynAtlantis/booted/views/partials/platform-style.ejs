@@ -1,0 +1,266 @@
+<style>
+    @import url(https://fonts.googleapis.com/css?family=Cabin+Sketch);
+    
+    body {
+      padding-top: 20px;
+    }
+
+    .title {
+      font-family: 'Cabin Sketch', Helvetica, Arial, sans-serif;
+      font-size: 4.0em;
+      width: 100%;
+      display: table;
+      text-align: center;
+      color: #2d2d2d;
+      overflow: hidden;
+    }
+
+    .middle {
+      position: relative;
+    }
+
+    #head {
+      z-index:10;
+      position: absolute;
+      text-align: center;
+      padding: 5px 0px;
+      width: 100%;
+      color: #eee;
+      margin: auto;
+      background-color: #2d2d2d;
+      opacity: 0.9;
+    }
+
+    #description {
+      display: none;
+      position: absolute;
+      width: 80%;
+      padding: 10px 20px;
+      margin: auto;
+      z-index:10;
+      background-color: #2d2d2d;
+      opacity: 0.9;
+      color: #eee;
+      top: 20%;
+      left: 5%;
+    }
+
+    #helper {
+      position: absolute;
+      text-align: center;
+      color: #eee;
+      padding-left: 0;
+      padding-right: 0;
+      height: 30px;
+      bottom: 0;
+      margin: auto;
+      background-color: #2d2d2d;
+      opacity: 0.9;
+      width: 100%;
+    }
+
+    #description.active {
+        display: block;
+    }
+
+    .content {
+      max-width: 513px;
+      position: relative;
+    }
+
+    @media (max-width: 500px) {
+      .content {
+        max-width: 352px;
+      }
+      .title {
+        font-size: 2.8em;
+      }
+      #description {
+        font-size: .9em;
+      }
+      #helper {
+        font-size: 3.5vw;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .content {
+        max-width: 580px;
+      }
+      .title {
+        font-size: 5.2em;
+      }
+    }
+
+    .radio {
+      clear: both;
+      position: relative;
+      text-align: center;
+      font-size: 1.5em;
+      height: 40px;
+      color: #2d2d2d;
+    }
+    .radio input[type='radio'] {
+      display: none;
+    }
+
+    .radio_label {
+      padding-left: 0 !important;
+      cursor: pointer;
+      padding-left: 2vw;
+      padding-right: 2vw;
+    }
+
+    #no:hover {
+      text-decoration: underline;
+      text-decoration-color: #309bff;
+    }
+
+    #yes:hover {
+      text-decoration: underline;
+      text-decoration-color: #f4425f;
+    }
+
+    #dontknow:hover {
+      text-decoration: underline;
+      text-decoration-color: #949494;
+    }
+
+
+    /*input[type='radio']:checked + label #dontknow {
+      border: 3px solid #949494;
+      border-radius: 5px
+    }
+
+    input[type='radio']:checked + label #yes {
+      border: 3px solid #F0788B;
+      border-radius: 5px
+    }
+
+    input[type='radio']:checked + label #no {
+      border: 3px solid #7ABFFF;
+      border-radius: 5px
+    }*/
+
+    label #yes {
+      color: #f4425f;  /*or *#309bff' */
+      text-decoration-color: #f4425f;
+    }
+
+    label #no {
+      color: #309bff;
+      text-decoration-color: #309bff;
+    }
+
+    /*input[type='radio']:checked + label #dontknow {
+      color: #f4ee42;
+      text-decoration-color: #f4ee42;
+    }*/
+
+    #checker {
+      display: none;
+      position: relative;
+      top: -65px;
+      z-index: 10;
+      font-size: 2em;
+      margin: 0;
+    }
+
+    #checker.active {
+      display: inline-block;
+    }
+
+    #checker.threat {
+      left: -120px;
+      color: #f4425f;
+    }
+
+    #checker.no_threat {
+      left: 120px;
+      color: #309bff;
+    }
+
+    .showAnswer {
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    .bottom {
+      position: relative;
+      text-align: right;
+    }
+
+    #next {
+      display: none;
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      right: 0;
+    }
+
+
+    #next:hover {
+      cursor: pointer;
+    }
+
+    #next2 {
+      width: 100px;
+      height: 100px;
+      position: relative;
+    }
+
+    #countdown {
+      font-size: 7em;
+      color: #2d2d2d;
+      position: absolute;
+      right: 0;
+    }
+
+    #progressContainer {
+      color: #2d2d2d;
+      margin: 0 auto;
+      position: relative;
+      text-align: left;
+      height: 20px;
+      width: 100%;
+      background-color: #ccc;
+      border-radius: 15px;
+      box-shadow: inset 5px 5px 4px rgba(0,0,0,0.1);
+    }
+
+    #progress {
+      position: relative;
+      height: 100%;
+      width: 0%;
+      margin-left: 0;
+      border-radius: 15px;
+      z-index: 10;
+      background-color: #4CAF50;
+    }
+
+
+  @media (max-height: 1440px) {
+    #next {
+      right: -120px;
+      bottom: 250px;
+    }
+
+    #countdown {
+      bottom: 200px;
+      right: -80px;
+    }
+  }
+
+  @media (max-width: 730px) {
+    #next, #countdown {
+      right: 0;
+      bottom: -100px;
+    }
+
+    #countdown {
+      right: 0;
+      bottom: -140px;
+    }
+  }
+
+  </style>

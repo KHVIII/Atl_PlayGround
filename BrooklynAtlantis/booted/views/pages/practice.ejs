@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <%- include('../partials/platform-style') %>
+  <script type="text/javascript" src="scripts/practice.js"></script>
+</head>
+<body>
+  <header>
+    <%- include('../partials/platform-head') %>
+  </header>
+  <main>
+    <div class="container content unselectable">
+      <div class='middle'>
+        <p id='head'>This is a practice session.</p>
+        <div ><img id="image" width="100%" height="100%" src="images/practice1.png"></div>
+        <p id="description"></p>
+        <p id="helper"></p>
+      </div>
+      <div class='radio'>
+        <form action="action_page.php">
+          <input id="radio_threat" type="radio" name="answer" value="threat">
+          <label class="radio_label" for="radio_threat"><span id="yes">Threat</span></label>
+          <input id="radio_dontknow" type="radio" name="answer" value="dontknow">
+          <label class="radio_label" for="radio_dontknow"><span id="dontknow">I don't know</span></label>
+          <input id="radio_no_threat" type="radio" name="answer" value="no_threat">
+          <label class='radio_label' for="radio_no_threat"><span id="no">No Threat</span></label>
+        </form>
+
+        <p id='checker'>&#10003;</p>
+      </div>
+      <div style='clear: both; text-align: center;'>
+        <p id='correctAnswer'></p>
+      </div>
+      <div class='bottom'>
+        <img id='next' src="images/next.png">
+      </div>
+    </div>
+  </main>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>
