@@ -7,11 +7,44 @@ Misc. also need to change regis/login so whenever it's down it leads you to the 
 
 
 jun 24:
-1. Change Contacts to Contact
-   Change Profile to My Profile 
-2. Change the loggedIn layout to My Profile | Past Studies | About | Contact
+1. Change Contacts to Contact DONE
+   Change Profile to My Profile DONE
+2. Change the loggedIn layout to My Profile | Past Studies | About | Contact DONE
 3. Show User information somewhere on the my profile page
 4. start working on the ability to change user information.
-
 5. For friday, have name shown and ability to change name. 
 6. check how to do email authentication 
+
+
+Look up js drawing related libraries
+
+--------------------------------------------------------------------------------------
+how promise works: https://web.dev/promises/
+
+var p = new Promise (function(resolve, reject) {
+if good:
+	resolve(whatever);
+if bad:
+	reject(whatever); }
+//Promise takes in one argument: a callback function with two parameters, resolve and reject. resolve is called when it's good and reject called when it's bad.
+
+
+p.then(callbackForPRes,callbackForPRej).then(res,rej).......
+//the then after arguments have two optional callback arguements, first one is called when p resolves, second one is called when p is rejected. 
+	//both of these callback functions have one parameter, which will just take whatever was passed from the resolve or reject returned from the callback / promise. 
+//If you want to chain promises together (e.g. have one async do stuff only after another async is fulfilled), then you pass the promise down the resolve. Since you cannot use promise as one of the two callback options in then. 
+
+
+ 
+ jun 29:
+ Start with the tagging things
+ 1. have a local folder on the server where I can fetch pictures one by one
+ 2. Somehow store what pictures the user have not done and only show those. 
+ 3. Allow User to Submit Pictures, Skip Pictures
+ 4. How to implement the remembering pictures not yet done
+ 	FIrst Appraoch:
+ 		Create table for each picture, each row has ID and coords and whatever.
+ 		When we look for picture, we go through every picture, any picture that is not tagged will not have the user id on its table, so the user will get that picture. 
+ 	Second Appraoch:
+ 		Have a table named pictures_undone with 2 columns., first column is the picture ID, the 2nd column is the user id.
+ 		when a user is creted, we push all the undone pictures ids with the user id in this table, and delete a row with user id and pic id the user finishes a pic. When the user need a new 			pic, we just search for his id and get the first row. 

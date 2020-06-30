@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A simple example</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <script type="text/javascript" src="scripts/pannellum.js"></script>
+    <style>
+    #panorama {
+        width: 600px;
+        height: 400px;
+    }
+    </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <div class="container content unselectable">
+    <div id="panorama"></div>
+    <script>
+    pannellum.viewer('panorama', {
+        "type": "equirectangular",
+        "panorama": "360images/1.jpg",
+        /*
+         * Uncomment the next line to print the coordinates of mouse clicks
+         * to the browser's developer console, which makes it much easier
+         * to figure out where to place hot spots. Always remove it when
+         * finished, though.
+         */
+        "hotSpotDebug":"true",
+        "hotSpots": [
+            {
+                "pitch": 14.7,
+                "yaw": 178.5,
+                "type": "Between Two Lights",
+                "text": "I have no idea what these two things are, I assume they are lights?",
+                
+            },
+            {
+                "pitch": 10.6,
+                "yaw":101.3,
+                "type": "Red dot",
+                "text": "spooky red dot"
+            }
+        ]
+    });
+    </script>
+    </div>
+  </main>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

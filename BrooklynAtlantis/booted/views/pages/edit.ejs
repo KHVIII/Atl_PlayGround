@@ -3,6 +3,19 @@
 <head>
   <% include ../partials/head %>
   <% include ../partials/css %>
+  <style>
+    #edit {
+      background-color: #57068c;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 8px;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -10,8 +23,37 @@
   </header>
   <main>
     <%- include('../partials/main-jumbotron') %>
-    <div class="container content" style="max-width: 768px;">
-      <h1>this is where users can edit their account information.</h1>
+    <div class="container content">
+      <h1 style="margin-left: auto;">Sign Up</h1>
+      <div style="text-align:center; position: relative; max-width:384px; margin: 0 auto;">
+        <% if (errmsg) {%>
+          <p> <%= errmsg %> </p>
+        <% } %>
+        <div style="border-left: 1px solid #eee; width: 1px; position: absolute; left: 45px; height: 100%;"></div>
+       </div>
+      <form action='/edit_name' method='POST' style="max-width:384px; margin: 0 auto;">
+       <div class="form-group">
+         <div style="text-align:center">
+          <label for="name">Name</label>
+        </div>
+         <input type="name" class="form-control" name="name" id="name" placeholder= <%=name%> required>
+       </div>
+       <button type="submit" id="edit">Change Name</button>
+      </form>
+      <form action='/edit_email' method='POST' style="max-width:384px; margin: 0 auto;">
+        <div class="form-group">
+          <div style="text-align:center">
+           <label for="email">E-mail</label>
+         </div>
+          <input type="email" class="form-control" name="email" id="email" placeholder= <%=email%> required>
+        </div>
+        <button type="submit" id="edit">Change E-mail</button>
+      </form>
+      <form action='/change_password', method='GET', style="max-width:384px; margin: 0 auto;"> <!-- /Edit is not yet implemented-->
+        <div>
+            <button type="submit" id="edit">Change Password</button>
+        </div>
+    </form>
     </div>
   </main>
   <footer>

@@ -50,6 +50,15 @@ var bcrypt           = require('bcrypt-nodejs');
 // Session "area" for storing messages
 var flash            = require('connect-flash');
 
+//nodemailer for mailing forgotten passwords
+var nodemailer = require('nodemailer');
+
+//async.waterfall for password recovery
+var async = require('async');
+
+//native crypto for token generation
+var crypto = require('crypto');
+
 var DEV              = false;
 
 // This is needed to allow the website itself to log in to 
@@ -211,9 +220,10 @@ app.use(session({
 
 // To point out where the static files are
 // https://www.tutorialspoint.com/expressjs/expressjs_static_files.htm
-app.use('/scripts', express.static(__dirname + '/newpub/scripts')); //whenever /scripts is used we know it's the newpub scripts
+app.use('/scripts', express.static(__dirname + '/newpub/scripts')); 
 //app.use('/styles',  express.static(__dirname + '/newpub/css'));
 app.use('/images',  express.static(__dirname + '/newpub/images'));
+app.use('/360images', express.static(__dirname + '/newpub/360images')) //this handles serving file from directory to server. 
 app.use('/css',     express.static(__dirname + '/booted/css'))
 
 // Templeates for HTML files automatically turned into HTML 
@@ -248,6 +258,7 @@ passport.deserializeUser(function(id, done) {
     var user = new Object();
     user.id = rows[0].id;
     user.email = rows[0].email;
+    user.name = rows[0].name; 
     /*if (rows[0].fbID) {  //in case user has facebook linked
       user.facebook = {
         email : rows[0].email,
@@ -283,10 +294,11 @@ function(req, email, password, done) {
         var newUser = new Object();
         newUser.email = email;
         newUser.password = bcrypt.hashSync(password);
+        newUser.name = req.body.name;
 
         connection.query({
-            sql: "INSERT INTO auth (email, password) values (?, ?)",
-            values: [email, newUser.password]
+            sql: "INSERT INTO auth (email, password, name) values (?, ?, ?)",
+            values: [email, newUser.password, newUser.name]
         }, function(err, rows) {
           if (err) throw err;
           newUser.id = rows.insertId;
@@ -335,6 +347,7 @@ passport.use('local-login', new LocalStrategy({
           user.id       = rows[0].id;
           user.email    = rows[0].email;
           user.password = rows[0].password;
+          user.name     = rows[0].name;
 		  return done(null, user);
         }
       }
@@ -473,25 +486,20 @@ app.get('/profile', mustBeLoggedIn, function(req, res) { //this will be the 'Pro
   req.session.lastPage = '/profile';
   res.render('pages/profile', {
     auth: req.isAuthenticated(),
-    page: 1
+    page: 1,
+    errmsg:req.flash('err'),
+    name: req.user.name
   });
 });
 
 app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
   req.session.lastPage = '/tag';                      //not implemented YET
-  res.render('pages/tag', {
+  res.render('pages/tag_test', {
     auth: req.isAuthenticated(),
-    page: -1
+    page: 2,
   });
 });
 
-app.get('/edit', mustBeLoggedIn, function(req, res) { //this will be the 'Profile' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
-  req.session.lastPage = '/edit';                     //not implemented YET
-  res.render('pages/edit', {
-    auth: req.isAuthenticated(),
-    page: -1
-  });
-});
 
 app.get('/participate', alreadyLoggedIn, function(req, res) { //this will be the 'Participate' Page ONLY ACCESSIBLE IF NOT AUTHENTICATED
   req.session.lastPage = '/participate';
@@ -527,37 +535,42 @@ app.get('/past_studies', function(req, res) { //This will be the 'Past Studies' 
   });
 });
 
-app.get('/contacts', function(req, res) { //This will be the 'Contacts' Page
-  req.session.lastPage = '/contacts';
-  res.render('pages/contacts', {
+
+app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
+  req.session.lastPage = '/contact';
+  res.render('pages/contact', {
     auth: req.isAuthenticated(),
     page: 3
   });
 });
 
 
+
+//---------------------------------------------------------------------------THIS SECTION IS ALL THREAT OR NO THREAT DEMO, USED FOR PAST STUDIES DEMO ONLY, NO DATA SHOULD BE STORED.
 app.get('/practice', function(req, res, next) {
   if (req.session.lastPage == '/participate') {
     req.session.lastPage = '/practice';
   }
   return next();
-}, mustBeLoggedIn, hasNotCompleted, function(req, res) {
+}, function(req, res) {
   res.render('pages/practice', {
-    auth: req.isAuthenticated()
+    auth: 1
   });
 });
 
-app.get('/pre_platform', mustBeLoggedIn, hasNotCompleted, function(req, res) {
+app.get('/pre_platform', function(req, res) {
   res.render('pages/pre_platform', {
-    auth: req.isAuthenticated()
+    auth: 1
   });
 });
 
-app.get('/platform', mustBeLoggedIn, hasNotCompleted, function(req, res) {
+app.get('/platform', function(req, res) {
   res.render('pages/platform', {
-    auth: req.isAuthenticated()
+    auth: 1
   });
 });
+
+//------------------------------------------------------------------------LOGIN, SIGNUP, and LOGOUT
 
 app.get('/login', alreadyLoggedIn, function(req, res) {
   res.render('pages/login', {
@@ -567,18 +580,12 @@ app.get('/login', alreadyLoggedIn, function(req, res) {
   });
 });
 
-app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
+app.post('/login', passport.authenticate('local-login', {
+  successRedirect: '/profile',
+  failureRedirect: '/login',
+  failureFlash: true
+}));
 
-app.get('/auth/facebook/callback?', 
-  passport.authenticate('facebook', {
-    successRedirect: '/callback',
-    failureRedirect: '/'
-  }));
-
-app.get('/logout', function(req, res){
-  req.logout();
-  res.redirect('/');
-});
 
 app.get('/signup', alreadyLoggedIn, function(req, res) {
   res.render('pages/signup', {
@@ -587,6 +594,265 @@ app.get('/signup', alreadyLoggedIn, function(req, res) {
     page: -1
   });
 });
+
+app.post('/signup', alreadyLoggedIn, function(req, res, next) {
+  if (!(req.body.password == req.body.confirm)) {
+    req.flash('err', 'Passwords do not match.');
+    res.redirect('/signup');
+  }
+  else {
+    req.session.terms = req.body.terms;
+    return next();
+  }
+},passport.authenticate('local-signup', {
+  successRedirect: '/profile',
+  failureRedirect: '/signup',
+  failureFlash: true
+}));
+
+
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
+});
+
+
+//------------------------------------------RESET-PASSWORD-FROM-EMAIL------------------------
+//first, user goes to forgot, it renders a form that would POST their email information.
+app.get('/forgot', alreadyLoggedIn, function(req,res) { 
+  res.render('pages/forgot', {
+    auth: req.isAuthenticated(),
+    errmsg: req.flash('err'),
+    page: -1
+    
+  });
+});
+
+// this is where the posted email information is handled. If the email exists in database, a token with 1h validity is generated and sent to that email. This token and validity is stored inside auth table in mysql.
+// http://sahatyalkabov.com/how-to-implement-password-reset-in-nodejs/
+app.post('/forgot', function(req, res, next) {
+  async.waterfall([ //using waterfall to handle nested callbacks
+    function(done) { //generate a temporary token
+      crypto.randomBytes(20, function(err, buf) {
+        var token = buf.toString('hex');
+        done(err, token); //passes the token 
+      });
+    },
+
+    function(token, done) { //token catches token
+      connection.query({ //first mysql check if email exists
+        sql: 'SELECT * FROM auth WHERE email = ?',
+        values: [req.body.email]
+      }, function(err, rows) {
+        //connection.end();
+        if (err)
+          return (err);
+
+        if (!rows.length)
+        {
+          req.flash('err', 'No user found associated with email.');
+          res.redirect('/forgot');
+        }
+        else { //if email exists, we do another mysql connection this time to update the user row with the generated token and its validity.
+         // Correct user and password
+          var user = new Object();
+          user.id       = rows[0].id;
+          user.email    = rows[0].email;
+          user.password = rows[0].password;
+          user.name     = rows[0].name;
+          user.resetPasswordToken = token;
+          user.resetPasswordExpires = Date.now() + 3600000; // 1 hour validity
+        
+          connection.query({ //
+            sql: "UPDATE auth set resetPasswordToken =? , resetPasswordExpires =? WHERE id =?",
+            values: [user.resetPasswordToken, user.resetPasswordExpires, user.id]
+          }, function(err, rows) {
+            if (err) throw err;
+          });
+          
+          
+          done(err, token, user); //pass the token and the user
+        }
+      });
+    },
+    function(token, user, done) { //token cataches token, user catches email
+      console.log(user); //console logs down who requested a password recovery.
+      var smtpTransport = nodemailer.createTransport({ //set up mail info
+        service: 'gmail',
+        auth: {
+          user: 'BrooklynAtlantisRecovery@gmail.com',
+          pass: 'Sugarelephant@213240'
+        }
+      });
+      var mailOptions = { //edit mailing content and receiver
+        to: user.email,
+        from: 'BrooklynAtlantisRecovery@gmail.com',
+        subject: 'Brooklyn Atlantis Account Password Reset',
+        text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+          'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+          'http://' + req.headers.host + '/reset/' + token + '\n\n' +
+          'If you did not request this, please ignore this email and your password will remain unchanged.\n'
+      };
+      smtpTransport.sendMail(mailOptions, function(err) { //sending the mail with the token attached link
+        req.flash('err', 'An e-mail has been sent to ' + user.email + ' with further instructions.'); //flash stating completion of the email sending.
+        done(err, 'done');
+      });
+    }
+  ], function(err) {
+    if (err) return next(err);
+    res.redirect('/forgot'); //refresh page with flash
+  });
+});
+
+
+//This is the second part where user clicks on the link sent on the email with the token 
+app.get('/reset/:token', alreadyLoggedIn, function(req,res) {
+  req.session.lastPage = '/login'; //if this fails, we go back to login page.
+
+  connection.query({ //check the owner of the token and whether it has expired. 
+    sql: 'SELECT * FROM auth WHERE resetPasswordToken = ? AND resetPasswordExpires > ?',
+    values: [req.params.token, Date.now()]
+  }, function(err, rows) {
+    //connection.end();
+    if (err)
+      return done(err);
+
+    if (!rows.length)
+    {
+      req.flash('err', 'The link is either invalid or has expires, please try again.');
+      res.redirect("/login");
+    }
+    else {
+    // Correct user and password
+        var user = new Object();
+        user.id       = rows[0].id;
+        user.email    = rows[0].email;
+        user.password = rows[0].password;
+        user.name     = rows[0].name;
+        res.render('pages/reset', { //if link is valid, direct user to reset.ejs form where they POST new password info.
+          name: user.name, 
+          errmsg: req.flash('err')
+        });
+    
+    }
+  });
+});
+
+
+app.post('/reset/:token', function(req, res) { //submitted reset form, we test the token again to see if it's expired, if not then we chage the password in mysql and redirect user back to login.
+  req.session.lastPage = '/login';
+  async.waterfall([
+    function(done) {
+      connection.query({
+        sql: 'SELECT * FROM auth WHERE resetPasswordToken = ? AND resetPasswordExpires > ?',
+        values: [req.params.token, Date.now()]
+      }, function(err, rows) {
+        //connection.end();
+        if (err)
+          throw err;
+    
+        if (!rows.length)
+        {
+          req.flash('err', 'The link is either invalid or has expires, please try again.');
+          res.redirect("/login");
+          throw err;
+        }
+        else {
+          var user = new Object();
+          user.id       = rows[0].id;
+          user.email = rows[0].email;
+          user.password = bcrypt.hashSync(req.body.password);
+          user.name = rows[0].name;
+          connection.query({
+            sql: "UPDATE auth set password = ?, resetPasswordToken = null , resetPasswordExpires = null WHERE id =?",
+            values: [user.password,user.id]
+          }, function(err, rows) {
+            if (err) throw err;
+          });
+          console.log("Password updated for" + user.name);
+        }
+        done(err,user);
+      });
+    },
+
+    function(user, done) {
+      console.log(user);
+      var smtpTransport = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'BrooklynAtlantisRecovery@gmail.com',
+          pass: 'Sugarelephant@213240'
+        }
+      });
+      var mailOptions = {
+        to: user.email,
+        from: 'BrooklynAtlantisRecovery@gmail.com',
+        subject: 'Your password has been changed',
+        text: 'Hello,\n\n' +
+          'This is a confirmation that the password for your account ' + user.email + ' has just been changed.\n'
+      };
+      smtpTransport.sendMail(mailOptions, function(err) {
+        req.flash('err', 'Success! Your password has been changed, please log in with your new password.');
+        done(err,'done');
+      });
+    }
+  ], function(err) {
+    res.redirect('/login');
+  });
+});
+//-----------------------------------------------Editing Profile-------------
+app.get('/edit', mustBeLoggedIn, function(req,res) {
+  res.render('pages/edit', {
+    name: req.user.name,
+    email: req.user.email,
+    errmsg: req.flash('err'),
+    auth: req.isAuthenticated(),
+    page:1
+  })
+});
+
+//app.post('/edit_name', function(req,res))
+
+
+//------------------------------------------------Change Password (this is when I am already logged in) ------------------------------------
+app.get('/change_password', mustBeLoggedIn, function(req,res) {
+  res.render('pages/reset', {
+    name: req.user.name, 
+    errmsg: req.flash('err')
+  })
+});
+
+app.post('/change_password', mustBeLoggedIn, function(req,res){
+  hashedPassword = bcrypt.hashSync(req.body.password);
+
+
+  connection.query({
+    sql: "UPDATE auth set password = ?, resetPasswordToken = null , resetPasswordExpires = null WHERE id =?",
+    values: [hashedPassword,req.user.id]
+  }, function(err, rows) {
+  if (err) throw err;
+  });
+
+  console.log("Password updated for" + req.user.name);
+
+    req.flash('err','Password Updated!');
+    res.redirect('/profile');
+  });
+
+
+//------------------------------LEGACY FACEBOOK STUFF-----------------
+/*
+app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
+
+app.get('/auth/facebook/callback?', 
+  passport.authenticate('facebook', {
+    successRedirect: '/callback',
+    failureRedirect: '/'
+  }));
+*/
+
+//-----------------------------UNUSED PAGES TO BE USED LATER
+
 
 app.get('/survey', mustBeLoggedIn, function(req, res) {
   res.render('pages/survey', {
@@ -604,29 +870,8 @@ app.get('/thanks', function(req, res) {
   });
 });
 
-// POST request - for the server to store certain data
-// https://en.wikipedia.org/wiki/POST_(HTTP)
-// Need to collect all these entries in the database
-app.post('/signup', alreadyLoggedIn, function(req, res, next) {
-  if (!(req.body.password == req.body.confirm)) {
-    req.flash('err', 'Passwords do not match.');
-    res.redirect('/signup');
-  }
-  else {
-    req.session.terms = req.body.terms;
-    return next();
-  }
-},passport.authenticate('local-signup', {
-  successRedirect: '/profile',
-  failureRedirect: '/signup',
-  failureFlash: true
-}));
 
-app.post('/login', passport.authenticate('local-login', {
-  successRedirect: '/profile',
-  failureRedirect: '/login',
-  failureFlash: true
-}));
+
 
 app.post('/consent', function(req, res) {
   var terms = req.body.terms? 1:0;
@@ -648,7 +893,8 @@ app.post('/survey', function(req, res) {
       getresult: req.body.getresult? 1:0,
       futurehelp:req.body.futurehelp? 1:0
     }
-
+    
+    /*
     connection.query({
       sql: "INSERT INTO survey (`id`, `interest`, `education`, `zip`, `email_results`, `email_future`) VALUES (?, ?, ?, ?, ?, ?)",
       values: [
@@ -670,12 +916,14 @@ app.post('/survey', function(req, res) {
       if (err) throw err;
     });
     //console.log(result);
+    */
   });
-  res.redirect('/thanks');
+  res.redirect('/past_studies');
 });
 
 app.post('/platform', function(req, res) {
 
+  /*
   var answers = JSON.parse(req.body.answers);
   result = {
     sequence: JSON.parse(req.body.sequence),
@@ -750,6 +998,7 @@ app.post('/platform', function(req, res) {
   }, function(err, rows) {
     if (err) throw err;
   });
+  */
   res.redirect("/survey");
 });
 
