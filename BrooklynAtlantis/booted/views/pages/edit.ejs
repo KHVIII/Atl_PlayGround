@@ -5,15 +5,15 @@
   <% include ../partials/css %>
   <style>
     #edit {
-      background-color: #57068c;
-      border: none;
+      background-color: #4CAF50;
       color: white;
-      padding: 12px 20px;
-      text-align: center;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
       cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 8px;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
     }
   </style>
 </head>
@@ -24,7 +24,7 @@
   <main>
     <%- include('../partials/main-jumbotron') %>
     <div class="container content">
-      <h1 style="margin-left: auto;">Sign Up</h1>
+      <h1 style="text-align: center">Edit My Profile</h1>
       <div style="text-align:center; position: relative; max-width:384px; margin: 0 auto;">
         <% if (errmsg) {%>
           <p> <%= errmsg %> </p>

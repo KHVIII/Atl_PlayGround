@@ -480,8 +480,6 @@ app.get('/index', function(req, res) { //this will be the 'About' page
   });
 });
 
-app.get('')
-
 app.get('/profile', mustBeLoggedIn, function(req, res) { //this will be the 'Profile' Page ONLY ACCESSIBLE IF AUTHENTICATED
   req.session.lastPage = '/profile';
   res.render('pages/profile', {
@@ -492,13 +490,7 @@ app.get('/profile', mustBeLoggedIn, function(req, res) { //this will be the 'Pro
   });
 });
 
-app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
-  req.session.lastPage = '/tag';                      //not implemented YET
-  res.render('pages/tag_test', {
-    auth: req.isAuthenticated(),
-    page: 2,
-  });
-});
+
 
 
 app.get('/participate', alreadyLoggedIn, function(req, res) { //this will be the 'Participate' Page ONLY ACCESSIBLE IF NOT AUTHENTICATED
@@ -544,31 +536,88 @@ app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
   });
 });
 
+//------------------------------------------------------------------------------------Tagging
 
+app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
+  req.session.lastPage = '/tag';                      //not implemented YET
 
-//---------------------------------------------------------------------------THIS SECTION IS ALL THREAT OR NO THREAT DEMO, USED FOR PAST STUDIES DEMO ONLY, NO DATA SHOULD BE STORED.
-app.get('/practice', function(req, res, next) {
-  if (req.session.lastPage == '/participate') {
-    req.session.lastPage = '/practice';
-  }
-  return next();
-}, function(req, res) {
-  res.render('pages/practice', {
-    auth: 1
+  res.render('pages/tag_test', {
+    auth: req.isAuthenticated(),
+    page: 1,
+    pic: "img1",
+    errmsg: req.flash('err'),
   });
 });
 
-app.get('/pre_platform', function(req, res) {
-  res.render('pages/pre_platform', {
-    auth: 1
+app.post('/tag', function(req,res) {
+  var tag_list = JSON.parse(req.body.tag_list);
+  console.log(tag_list);
+  console.log(req.body.pic + typeof req.body.pic);
+  console.log('user id: ' + req.user.id );
+  console.log(req.body.time);
+  //res.redirect('/tag');
+
+  connection.query({ //first mysql check if user id already exists with the picture name
+    sql: "SELECT * FROM tagRecords WHERE id = ? AND pic_name = ?", 
+    values: [req.user.id,req.body.pic]
+  }, function(err, rows) {
+    //connection.end();
+    if (err)
+    {
+      console.log('beep boop, error' + err);
+      return (err);
+    }
+
+    if (rows.length) //if user already tagged the image
+    {
+      console.log('beep boop, user tried to retag.');
+      req.flash('err', 'User already tagged this image');
+      res.redirect('/tag');
+    }
+    
+    else { 
+      /*
+      //the only user input that need to be sanitied is pic_name, we will sanitize that alongside with tag_list later.
+      //constructing the mysql statement, inserting the data collected onto the corresponding pic table
+      var mysql_arg = 'INSERT INTO ? ( id, '; 
+      for (let i = 1; i < tag_list.length; i++) {mysql_arg += 'tag' + i + ', '; } //for each tag, we tell mysql that we need to fill one more column. the columns are formatted as tag1,tag2,tag3,.....all the way to the max allowed tag nums.
+      mysql_arg += 'tag' + tag_list.length + ') VALUES (';
+      for (let i = 1; i < tag_list.length; i++) {mysql_arg += '?, ';}
+      mysql_arg += '?, ?);'; //all tag values + the user id 
+    
+      tag_list.unshift(req.body.pic); //put pic name to first of the array
+      tag_list.push(req.user.id);
+      
+      connection.query({ 
+        sql: mysql_arg,
+        values: tag_list //first item is pic_name, then the rest are just tags.
+      }, function(err, rows) {
+        //connection.end();
+        if (err)
+          return (err);
+      });
+      */
+
+      connection.query({
+        sql: "INSERT INTO tagRecords (id, time, pic_name, tags) VALUES (?, ?, ?, ?)", //the tagRecords have 4 columns: id -> INT PRIMARY KEY user id, time -> STR time of recording in UTC, pic_name -> STR file name of the tagged pic, tags -> JSON json file containing the tags in the format of [[name1,x1,y1],[name2,x2,y2]...]  
+        values: [req.user.id, req.body.time, req.body.pic, req.body.tag_list]
+      }, function (err, rows) {
+        if (err)
+        {
+          console.log("tag insertion error: \n " + err);
+          return err;
+        }
+        else{
+          console.log("New tag inserted. User Id: " + req.user.id + "\nPicture Name: " + req.body.pic + "\n Time submitted: " + req.body.time + "\n");
+          res.redirect('/tag');
+        }
+
+      });
+    }
   });
+
 });
 
-app.get('/platform', function(req, res) {
-  res.render('pages/platform', {
-    auth: 1
-  });
-});
 
 //------------------------------------------------------------------------LOGIN, SIGNUP, and LOGOUT
 
@@ -839,6 +888,30 @@ app.post('/change_password', mustBeLoggedIn, function(req,res){
     res.redirect('/profile');
   });
 
+
+//---------------------------------------------------------------------------THIS SECTION IS ALL THREAT OR NO THREAT DEMO, USED FOR PAST STUDIES DEMO ONLY, NO DATA SHOULD BE STORED.
+app.get('/practice', function(req, res, next) {
+  if (req.session.lastPage == '/participate') {
+    req.session.lastPage = '/practice';
+  }
+  return next();
+}, function(req, res) {
+  res.render('pages/practice', {
+    auth: 1
+  });
+});
+
+app.get('/pre_platform', function(req, res) {
+  res.render('pages/pre_platform', {
+    auth: 1
+  });
+});
+
+app.get('/platform', function(req, res) {
+  res.render('pages/platform', {
+    auth: 1
+  });
+});
 
 //------------------------------LEGACY FACEBOOK STUFF-----------------
 /*

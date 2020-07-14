@@ -1,0 +1,14 @@
+pannellum notes
+at line 3254, render outspot, added console to attempt to log the x and y coordinates on the image.
+
+in the 360 images, dimensions are 5376 wide x 2688 high, 
+middle is (2688,1344)
+1 yaw (horizontal) = (5376/360) = 14.93333
+1 pitch (vertical) = (2688/180) = 14.93333
+
+red dot positions: 
+yaw = 101.3 -> x = 14.93333(101.3) + 2688 = 4200.74633
+pitch = 10.2 -> y = 1344 - 14.93333(10.2) = 1191.68003
+is red dot should be at (4200.74633, 1191.68003), gimp shows it does.
+
+

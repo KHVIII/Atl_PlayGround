@@ -2,16 +2,129 @@
 <html lang="en">
 <head>
   <% include ../partials/head %>
+  <% include ../partials/scripts %>
   <% include ../partials/css %>
+  <script src="scripts/tag_help.js" type="text/javascript"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A simple example</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
-    <script type="text/javascript" src="scripts/pannellum.js"></script>
+    <script type="text/javascript" src="scripts/dev_pannellum.js"></script>
     <style>
     #panorama {
-        width: 600px;
-        height: 400px;
+    width: 100%;
+    height: 100vh; 
+    text-align: center;
+    }
+    #controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 2;
+        text-align: center;
+        width: 100%;
+        padding-bottom: 20px;
+    }
+    .ctrl {
+        padding: 8px 5px;
+        text-align: center;
+        background: #6d6d6d;
+        display: inline-block;
+        cursor: pointer;
+        font-size: 20px;
+    }
+    .ctrl:hover {
+        background: rgba(200, 200, 200, 1);
+    }
+    .wrapper {
+      display:flex;
+      width: 100%;
+      align-items: stretch;
+    }
+    #sidebar {
+      min-width: 250px;
+      max-width: 250px;
+      min-height: 100vh;
+      background: #57068c;
+      color: #fff;
+      
+    }
+    #err p{
+      color: #f00202;
+    }
+    #sidebar .sidebar-header{
+      padding: 20px;
+      background: #8900e1;
+    }
+    #sidebar ul.components {
+      padding:20px 0;
+      border-bottom: 1px solid #6d6d6d;
+    }
+    
+    #sidebar ul li {
+      padding-top: 10px;
+    }
+    
+    ul.CTAs {
+      padding: 15px;
+    }
+    .sctrl{
+      padding: 8px 5px;
+      text-align: center;
+      font-size: 20px !important;
+      display: block;
+      border-radius: 5px;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    #tagSubmit.sctrl{
+      background: #4fd84f;
+    }
+    #tagSubmit.sctrl:hover{
+      background: #6bee6b;
+    }
+    #tagHelp.sctrl{
+      background: #fff !important;
+      color: #6d6d6d !important;
+    }
+    #tagHelp.sctrl:hover{
+      background: rgb(196, 192, 192) !important;
+    }
+    #YTplayer {
+      max-width: 513px;
+      max-height: 288.6px;
+    }
+    .content {
+      max-width: 513px;
+    }
+    @media (max-width: 500px) {
+      #YTplayer {
+        max-width: 352px;
+        max-height: 200px;
+      }
+      .content {
+        max-width: 352px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      #YTplayer {
+        max-width: 673px;
+        max-height: 378.6px;
+      }
+      .content {
+        max-width: 673px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      #YTplayer {
+        max-width: 833px;
+        max-height: 468.6px;
+      }
+      .content {
+        max-width: 833px;
+      }
     }
     </style>
 </head>
@@ -20,40 +133,158 @@
     <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
   </header>
   <main>
-    <div class="container content unselectable">
-    <div id="panorama"></div>
+    <!-- Set up Custom Modal -->
+    <div id="err" style="text-align:center;">
+      <% if (errmsg) {%>
+        <p> <%= errmsg %> </p>
+      <% } %>
+    </div>
+    <div class="wrapper">
+      
+      <!-- Sidebar -->
+      <div id="sidebar">
+        <div class="sidebar-header">
+          <h3>Brooklyn Atlantis Tagging System</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+          <li>
+            <div class="ctrl" id="hs-toggle" title="Toggle Hot Spot Visibility">&#128065; Toggle tag visbillity on viewer</div> 
+          </li>
+          <li>  
+            <div class="ctrl" id="delete-all-hs" title="Delete All Hot Spots">&#10060; Delete all user created tags </div>
+          </li>
+          <li>
+            <h4> Current amount of tags created: 0</h4>
+          </li>
+        </ul>
+
+        <ul class="list-unstyled CTAs">
+          <li>
+            <div class="sctrl" id="tagSubmit" title="Submit and Go To Next Picture"> &#10004; Submit the picture and go next</div>
+          </li>
+
+          <li>
+            <div class="sctrl" id="tagHelp" title="Help me"> &#10068; Help</div>
+          </li>
+          <li>
+            
+          </li>
+        </ul>
+      </div>
+
+      <!-- modal window-->
+      <% include ../partials/modal %>
+
+      <!-- viewer-->
+      <div id="panorama"></div>
+
+
+
+    </div>
+
+
+
+
+    <div id="pic" data-pic =<%= pic %> ></div>
     <script>
-    pannellum.viewer('panorama', {
+    v = pannellum.viewer('panorama', {
         "type": "equirectangular",
-        "panorama": "360images/1.jpg",
+        "panorama": "360images/"+ (document.getElementById('pic').dataset.pic+".jpg"),
+        "showControls": false,
         /*
          * Uncomment the next line to print the coordinates of mouse clicks
          * to the browser's developer console, which makes it much easier
          * to figure out where to place hot spots. Always remove it when
          * finished, though.
          */
-        "hotSpotDebug":"true",
-        "hotSpots": [
+        //"hotSpotDebug":"true",
+
+        /*"hotSpots": [
             {
                 "pitch": 14.7,
                 "yaw": 178.5,
-                "type": "Between Two Lights",
+                "type": "info",
                 "text": "I have no idea what these two things are, I assume they are lights?",
                 
-            },
-            {
-                "pitch": 10.6,
-                "yaw":101.3,
-                "type": "Red dot",
-                "text": "spooky red dot"
             }
-        ]
+        ] */
     });
+    function post(params, method) {
+    method = method || "post"; // Set method to post by default if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+
+    for(var key in params) {
+      if(params.hasOwnProperty(key)) {
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", key);
+        hiddenField.setAttribute("value", params[key]);
+        form.appendChild(hiddenField);
+      }
+    }
+    document.body.appendChild(form);
+    form.submit();
+  };
+
+
+    
+    document.getElementById('hs-toggle').addEventListener('click', function(e) {
+        v.toggleHS();
+    });
+    document.getElementById('delete-all-hs').addEventListener('click', function(e) {
+        $('#deleteAllTags').modal({backdrop:'static'});
+        //calls the modal window for deleting all hs 
+
+    });
+    document.getElementById('tagSubmit').addEventListener('click', function(e) {
+        responseArray = v.submit()
+        //responseArray is in the format of [[name1,x1,y1],[name2,x2,y2]...]
+        var currentdate = new Date(); 
+        var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
+        post({
+        pic: (document.getElementById('pic').dataset.pic), //pass the name of the picture
+        tag_list: JSON.stringify(responseArray),
+        time: datetime
+        });
+        
+    });
+
+    document.getElementById('tagHelp').addEventListener('click', function(e) {
+      $('#')
+    })
+
+
+
+
+    /*
+    $('body').on('click', '.btn-add-hotspot', function() {
+        var inputText = "example hotspot text";
+        var currentPitch = v.getPitch();
+        var currentYaw = v.getYaw();
+        v.addHotSpot({"pitch":currentPitch, "yaw":currentYaw, "type":"info", "text":inputText});
+        console.log('Hotspots are added at pitch: ' + currentPitch + '; yaw: ' + currentYaw);
+    });
+
+
+    function hugeBruh() {
+      var inputText = "example hotspot text";
+        var currentPitch = v.getPitch();
+        var currentYaw = v.getYaw();
+        v.addHotSpot({"pitch":currentPitch, "yaw":currentYaw, "type":"info", "text":inputText});
+        console.log('Hotspots are added at pitch: ' + currentPitch + '; yaw: ' + currentYaw);
+    } */
     </script>
-    </div>
   </main>
-  <last>
-    <% include ../partials/scripts %>
-  </last>
+  <footer>
+    <br>
+    <br>
+    <% include ../partials/footer %>
+  </footer>
+
 </body>
 </html>

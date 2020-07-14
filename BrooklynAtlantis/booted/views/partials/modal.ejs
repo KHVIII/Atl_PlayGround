@@ -1,0 +1,74 @@
+<!-- Modal -->
+<div class="modal fade" id="deleteAllTags" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteAllTagsLabel">Delete All Tags</h5>
+        </div>
+        <div class="modal-body">
+          <h5> Wow, are you sure you want to delete all of the tags in this picture?</h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick = "v.deleteAllHS()">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="deleteOneTag" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteTagLabel">Delete Single Tag</h5>
+        </div>
+        <div class="modal-body">
+          <h5 id="deleteOneTagText"> Do you want to delete the tag </h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id = "deleteOneTagButton">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createOneTag" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createOneTagLabel">Name the Tag</h5>
+        </div>
+        <div class="modal-body">
+          <h5> To your best abilities, how would you call this object you just tagged? (max 12 chars)</h5> <br>
+          <input type="text" class = "form-control field" id="createOneTagInput">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id = "createOneTagButton">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="help" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aira-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Help</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align:center; margin: 0 auto;"><div id="YTplayer"></div></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
