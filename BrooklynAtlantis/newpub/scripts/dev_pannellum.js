@@ -2092,6 +2092,7 @@ function aboutMessage(event) {
 } */
 
 /** 
+ * Tim's
  * Prompts a name, and create a hotspot at the location with that name.
  * unimplemented: add the hotspot info to an array that is to be json'd later
  * @private 
@@ -2101,12 +2102,11 @@ function aboutMessage(event) {
 
 
  function rightClickHS(event) {
-    var maxTags = 3;  //default 12 tags since if we have max 12 tags, each tag contain 12(name) + 4(x-coord) + 4(y-coord), we will have 12*20 = 240 chars to store, in mysql, varchar max is 255 cuz 8 bit.
-    var maxChar = 12;
+    var maxTags = 500; //unreasonably large number  
+    
 
     var coords = mouseEventToCoords(event);
-        //console.log('Pitch: ' + coords[0] + ', Yaw: ' + coords[1] + 'Center Pitch: ' +
-        //    config.pitch + ', Center Yaw: ' + config.yaw + ', HFOV: ' + config.hfov);
+        //console.log('Pitch: ' + coords[0] + ', Yaw: ' + coords[1] + 'Center Pitch: ' + config.pitch + ', Center Yaw: ' + config.yaw + ', HFOV: ' + config.hfov);
 
     var pitch = coords[0],
         yaw = coords[1];
@@ -2124,54 +2124,36 @@ function aboutMessage(event) {
     }
     var x = Math.round(2688+x_change);
     
-    console.log('Click X-pos: ' + x + ' | Click Y-pos: ' + y);
+        //console.log('Click X-pos: ' + x + ' | Click Y-pos: ' + y);
 
-    if (!config.hotspots){config.hotspots = [];}
+    if (!config.hotSpots){config.hotSpots = [];} //if not existant already, generate an array hotSpots under config.
 
-   /* if (config.hotSpots.length === maxTags) //limit of how many tags on a single pic
+   if (config.hotSpots.length >= maxTags) //if user have an unreasonable amount of tags, we re-direct the user to profile and do not save their progress.
     {
-        window.alert('Maximum number of tags ('+maxTags+') created, you can delete some unwanted tags by double clicking on them.')
-        event.preventDefault(); //prevents the browser default right click menu
-    } else { */
+        window.location.assign('/profile');
+        
+    } 
     $("#createOneTag").modal({backdrop:'static'});
     event.preventDefault();
-    $('#createOneTagButton').unbind().click(function(e) {
-        //var name = $('#createOneTag').find(".field").val();
-        //$('#createOneTag').modal('hide');
-        //$('#createOneTag').find(".field").val('');
+    $('#createOneTagButton').unbind().click(function(e) { //listens for the 'yes' button press on the #createOneTag modal window.
+        //creates a promise to get the user input and hide the modal window 
         let addTagPromise = new Promise (function(resolve, reject){
             var name = $('#createOneTag').find(".field").val();
             $('#createOneTag').find(".field").val('');
             if ($('#createOneTag').modal('hide'))
             {
-                console.log('promise called.');
+                    //console.log('promise called.');
                 resolve(name);
             }
             
         });
 
-        addTagPromise.then(function(name) {
+        addTagPromise.then(function(name) { //only add the tag to the viewer after the user input is gotten and the modal window is closed.
             _this.addHotSpot({"pitch":pitch, "yaw":yaw, "type":"info", "text":name, "x":x, "y":y});
+            $('#currentTagAmount').html("Current amount of tags created: " + config.hotSpots.length);
             event.preventDefault();
         });
-
-
-        /*
-        var name = window.prompt("Please provide a concise tag / name for this object: ("+ maxChar +" chars max)"); //12 chars since if we have max 12 tags, each tag contain 12(name) + 4(x-coord) + 4(y-coord), we will have 12*20 = 240 chars to store, in mysql, varchar max is 255 cuz 8 bit.
-        if (name) 
-        {
-            while (name.length > maxChar)
-            {
-                name = window.prompt("Tag / name is too long, please keep it concise (+"+maxChar + "chars max)");
-            }
-            if (name) {
-                _this.addHotSpot({"pitch":pitch, "yaw":yaw, "type":"info", "text":name, "x":x, "y":y});
-                event.preventDefault();
-            }
-        }*/
     });
-        
-    
 }
 
 /**
@@ -3329,6 +3311,7 @@ function createHotSpot(hs) {
                     renderContainer.removeChild(current);
                 }
                 delete hs.div;
+                $('#currentTagAmount').html("Current amount of tags created: " + config.hotSpots.length);
                 $("#deleteOneTag").modal('hide'); 
             })
             
@@ -4109,6 +4092,7 @@ this.deleteAllHS = function() {
     if (config.hotSpots.length === 0) {return this;}
     destroyHotSpots();
     config.hotSpots = [];
+    $('#currentTagAmount').html("Current amount of tags created: " + config.hotSpots.length);
     $('#deleteAllTags').modal('hide'); //after all tags are deleted, we get rid of the modal window.
     return this;
     

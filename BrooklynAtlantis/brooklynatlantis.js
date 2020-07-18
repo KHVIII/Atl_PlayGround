@@ -259,6 +259,7 @@ passport.deserializeUser(function(id, done) {
     user.id = rows[0].id;
     user.email = rows[0].email;
     user.name = rows[0].name; 
+    user.pics_done = rows[0].pics_done;
     /*if (rows[0].fbID) {  //in case user has facebook linked
       user.facebook = {
         email : rows[0].email,
@@ -348,6 +349,7 @@ passport.use('local-login', new LocalStrategy({
           user.email    = rows[0].email;
           user.password = rows[0].password;
           user.name     = rows[0].name;
+          user.pics_done = rows[0].pics_done;
 		  return done(null, user);
         }
       }
@@ -541,15 +543,33 @@ app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
 app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
   req.session.lastPage = '/tag';                      //not implemented YET
 
-  res.render('pages/tag_test', {
-    auth: req.isAuthenticated(),
-    page: 1,
-    pic: "img1",
-    errmsg: req.flash('err'),
-  });
+
+
+  connection.query({
+    sql: "SELECT * FROM auth WHERE id = ?",
+    values: [req.user.id]
+  }, function(err,rows){
+    if (err)
+    {
+      console.log('Error while retriving pics_done from auth \n' + err);
+      return (err);
+    }
+    else
+    {
+      let curr_pic_name = "img" + (rows[0].pics_done+1);
+      res.render('pages/tag_test', {
+        auth: req.isAuthenticated(),
+        page: 1,
+        pic: curr_pic_name,
+        errmsg: req.flash('err'),
+      });
+    }
+  })
+
+
 });
 
-app.post('/tag', function(req,res) {
+app.post('/tag', mustBeLoggedIn, function(req,res) {
   var tag_list = JSON.parse(req.body.tag_list);
   console.log(tag_list);
   console.log(req.body.pic + typeof req.body.pic);
@@ -574,30 +594,8 @@ app.post('/tag', function(req,res) {
       req.flash('err', 'User already tagged this image');
       res.redirect('/tag');
     }
-    
+    //we now update tagRecords table
     else { 
-      /*
-      //the only user input that need to be sanitied is pic_name, we will sanitize that alongside with tag_list later.
-      //constructing the mysql statement, inserting the data collected onto the corresponding pic table
-      var mysql_arg = 'INSERT INTO ? ( id, '; 
-      for (let i = 1; i < tag_list.length; i++) {mysql_arg += 'tag' + i + ', '; } //for each tag, we tell mysql that we need to fill one more column. the columns are formatted as tag1,tag2,tag3,.....all the way to the max allowed tag nums.
-      mysql_arg += 'tag' + tag_list.length + ') VALUES (';
-      for (let i = 1; i < tag_list.length; i++) {mysql_arg += '?, ';}
-      mysql_arg += '?, ?);'; //all tag values + the user id 
-    
-      tag_list.unshift(req.body.pic); //put pic name to first of the array
-      tag_list.push(req.user.id);
-      
-      connection.query({ 
-        sql: mysql_arg,
-        values: tag_list //first item is pic_name, then the rest are just tags.
-      }, function(err, rows) {
-        //connection.end();
-        if (err)
-          return (err);
-      });
-      */
-
       connection.query({
         sql: "INSERT INTO tagRecords (id, time, pic_name, tags) VALUES (?, ?, ?, ?)", //the tagRecords have 4 columns: id -> INT PRIMARY KEY user id, time -> STR time of recording in UTC, pic_name -> STR file name of the tagged pic, tags -> JSON json file containing the tags in the format of [[name1,x1,y1],[name2,x2,y2]...]  
         values: [req.user.id, req.body.time, req.body.pic, req.body.tag_list]
@@ -608,14 +606,26 @@ app.post('/tag', function(req,res) {
           return err;
         }
         else{
-          console.log("New tag inserted. User Id: " + req.user.id + "\nPicture Name: " + req.body.pic + "\n Time submitted: " + req.body.time + "\n");
-          res.redirect('/tag');
+          connection.query({
+            sql:"UPDATE auth SET pics_done = pics_done + 1 WHERE id = ?",
+            values:[req.user.id]
+          }, function (err,rows){
+            if (err)
+            {
+              console.log("auth table pic done update error: \n" + err);
+              return err;
+            }
+            else
+            {
+              console.log("New tag inserted. User Id: " + req.user.id + "\nPicture Name: " + req.body.pic + "\n Time submitted: " + req.body.time + "\n");
+              req.flash('err', 'Tags Successfully submitted!')
+              res.redirect('/tag');
+            }
+          });
         }
-
       });
     }
   });
-
 });
 
 
