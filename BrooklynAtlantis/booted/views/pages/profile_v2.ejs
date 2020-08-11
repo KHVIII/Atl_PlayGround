@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ../partials/head %>
+  <% include ../partials/css %>
+  <style>
+    .content {
+      width:100%;
+    }
+    #buttons {
+      background-color: #57068c;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    img.profilestyle {
+      width: 200px;
+      height:200px;
+      border-radius: 50%;
+      border:1px solid #ccc;
+      object-fit: cover;
+    }
+    img.smallprofilestyle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border:1px solid #ccc;
+      object-fit: cover;
+    }
+    .wrapper {
+      display: flex;
+      width: 100%;
+      height:100vh;
+      align-items: center;
+      align-content: center;
+    }
+    #scoreboard {
+      display: flex;
+      min-width: 250px;
+      max-width: 250px;
+      min-height: 80vh;
+      background: #f5f5f5;
+      border-radius: 10px;
+      color: #330662;
+      justify-content: center;
+      align-items: center;
+    }
+    #contentbox {
+      width: 200px;
+      margin-right: 20px;
+    }
+    #profile_info{
+        width: 100%;
+        overflow: scroll;
+        height: 100vh;
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    #profile_info::-webkit-scrollbar {
+        display: none;
+    }
+    .info_section{
+        text-align:left; 
+        border-left: 1px solid #6d6d6d;
+        padding-bottom: 30px;
+        margin-bottom: 50px;
+    }
+    li h5{
+      margin-bottom: 0px;
+      margin-top: 10px;
+    }
+    li p{
+        color: #57068C;
+    }
+    .info_section h2{
+        border-bottom: 1px solid #6d6d6d; 
+    }
+    #profile_info h1{
+        font-size: 48px;
+    }
+    #profile_info h2{
+        font-size: 36px;
+    }
+    #profile_info h5{
+        font-size: 20px;
+    }
+    #profile_info p{
+        font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
+  </header>
+  <main>
+    <div class="container content" style="text-align:center">
+        <div class = wrapper>
+            <div id = "contentbox" style="text-align:center">
+
+                <!-- flash messages-->
+                <div style="text-align:center; position: relative; max-width:384px; margin: 0 auto; color:red">
+                    <% if (errmsg) {%>
+                        <p> <%= errmsg %> </p>
+                    <% } %>
+                    <div style="border-left: 1px solid #eee; width: 1px; position: absolute; left: 45px; height: 100%;"></div>
+                </div>
+
+
+                <h1 style="font-size: 28px; color:inherit !important;">Welcome back, </h1> 
+                <h2 style="margin-top:0px; font-size: 25px; color:#57068C;" id = 'name' > </h2>
+                
+                <!-- Profile Pic-->
+                <div style=”margin-left: 30%”>
+                <img class='profilestyle' src= "<%= 'propics/'+ pic%>" alt= "propics/default.jpg">
+                </div>
+
+                <!-- Change Profile Picture Modal-->
+                <div class="modal fade" id="changeProfPic" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="changeProfPicLabel">Change Profile Picture</h5>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/upload_propic" enctype="multipart/form-data" method="post" style="margin-top: 10px">
+                        <label class="custombutton" id="custombutton" style="width:200px;border: 1px solid #ccc;display: inline-block; padding: 6px 12px;cursor: pointer;">
+                        <input type="file" name="upload" accept="image/gif, image/jpeg, image/png" style=" display: none;" onchange="document.getElementById('customsubmit').style.background = 'lightgreen'">
+                        Select new file 
+                        </label>
+                        <input type="submit" id = "customsubmit" value="Upload" style="border: 1px solid #2d2d2d ; padding: 6px 12px; cursor: pointer; background-color: #ccc; color: #2d2d2d">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Profile Selection Buttons -->
+                <div style="padding-top:10px;"><p> What would you like to do today? </p> </div>
+                <!-- <p>Please select from one of the following activities below. </p> -->
+                <form action='/tag', method='GET', style="max-width:200px; margin: 0 auto;"> 
+                    <div>
+                        <button type="submit" id="buttons">Tag Pictures</button>
+                    </div>
+                </form>
+                <form action='/edit', method='GET', style="max-width:200px; margin: 0 auto;"> <!-- /Edit is not yet implemented-->
+                    <div>
+                        <button type="submit" id="buttons">Edit Your Profile / Information</button>
+                    </div>
+                </form>
+                <div style="max-width:200px; margin: 0 auto;">
+                    <button type="submit" id="buttons" data-toggle="modal" data-target="#changeProfPic">Change Profile Picture</button>
+                </div>
+            </div>
+
+            <div id="profile_info">
+                <h1> My Public Profile</h1>
+                <div class = "info_section">
+                    <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Overview: </h2>
+                    <div style="padding-left: 15px;">
+                        <ul class="list-unstyled">
+                            <li>
+                                <h5>Last Time Online (UTC): </h5>
+                                <p id='recent_log_in'>-</p>
+                            </li>
+                            <li>
+                                <h5>Total Number of Pictures Tagged: </h5>
+                                <p id='pics_done'>0</p>
+                            </li>
+                            <li>
+                                <h5>Total Number of Tags Placed: </h5>
+                                <p id='tags_done'>0</p>
+                            </li>
+                            <li>
+                                <h5>Member Since: </h5>
+                                <p id='reg_date'>-</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class = "info_section">
+                    <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Personal Bio: </h2>
+                    <div style="padding-left: 15px;">
+                        <p id='bio' style='color:#57068C;'> -</p>
+                    </div>
+                </div>
+            
+                <div class = "info_section">
+                    <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Personal Info: </h2>
+                    <div style="padding-left: 15px;">
+                        <ul class="list-unstyled">
+                            <li>
+                                <h5>Occupation: </h5>
+                                <p id='occupation'>-</p>
+                            </li>
+                            <li>
+                                <h5>Education: </h5>
+                                <p id='education'>-</p>
+                            </li>
+                            <li>
+                                <h5>Current Location: </h5>
+                                <p id='lives_in'>-</p>
+                            </li>
+                            <li>
+                                <h5>Hometown: </h5>
+                                <p id='is_from'>-</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class = "info_section">
+                    <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Contact Information: </h2>
+                        <div style="padding-left: 15px;">
+                            <ul class="list-unstyled">
+                                <li>
+                                    <h5>Phone: </h5>
+                                    <p id='phone'>-</p>
+                                </li>
+                                <li>
+                                    <h5>Email: </h5>
+                                    <p id='public_email'>-</p>
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+                <script>
+                    var infoObj = <%- info %>; //array of info 
+                    console.log(infoObj);
+                    for (var keys in infoObj){
+                        if ( infoObj[keys] && infoObj[keys] != 'null' ){
+                            console.log(keys);
+                            document.getElementById(keys).innerHTML = infoObj[keys];
+                        } else {
+                            console.log(keys + 'failed');
+                        }
+                    }
+                    /*
+                    document.getElementById('tags_done').innerHTML = infoObj.tags_done;
+                    document.getElementById('pics_done').innerHTML = infoObj.pics_done;
+                    document.getElementById('reg_date').innerHTML = infoObj.reg_date;
+                    document.getElementById('bio').innerHTML = infoObj.bio;
+                    document.getElementById('occupation').innerHTML = infoObj.occupation;
+                    document.getElementById('education').innerHTML = infoObj.education;
+                    document.getElementById('lives_in').innerHTML = infoObj.lives_in;
+                    document.getElementById('is_from').innerHTML = infoObj.is_from;
+                    document.getElementById('phone').innerHTML = infoObj.phone;
+                    document.getElementById("public_email").innerHTML=infoObj.public_email; */
+                </script>
+              
+            
+                
+            </div>
+        </div>
+    </div>
+  </main>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <last>
+    <% include ../partials/scripts %>
+  </last>
+</body>
+</html>

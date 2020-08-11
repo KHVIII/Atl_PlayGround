@@ -15,6 +15,28 @@
       padding-top: 10px;
       padding-bottom: 10px;
     }
+    .info_section{
+        text-align:left; 
+        margin-left:10px;
+        border-left: 1px solid #6d6d6d;
+        padding-bottom: 30px;
+        margin-bottom: 50px;
+    }
+    li p{
+      margin-bottom: 0px;
+      margin-top: 10px;
+    }
+    .buttons {
+      background-color: #57068c;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -22,38 +44,128 @@
     <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
   </header>
   <main>
-    <%- include('../partials/main-jumbotron') %>
+
     <div class="container content">
       <h1 style="text-align: center">Edit My Profile</h1>
       <div style="text-align:center; position: relative; max-width:384px; margin: 0 auto;">
         <% if (errmsg) {%>
           <p> <%= errmsg %> </p>
         <% } %>
+        <% if (first_time == 1) { %>
+          <p>  Please tell us a bit more about yourself. All of the info here will be displayed to other users when they check out your profile! If you prefer to do this later, press cancel. </p>
+        <% } %>
         <div style="border-left: 1px solid #eee; width: 1px; position: absolute; left: 45px; height: 100%;"></div>
-       </div>
-      <form action='/edit_name' method='POST' style="max-width:384px; margin: 0 auto;">
-       <div class="form-group">
-         <div style="text-align:center">
-          <label for="name">Name</label>
+      </div>
+
+      <div class = "info_section">
+          <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Personal Bio: </h2>
+          <div style="padding-left: 15px;">
+              <textarea id="newBio" name="Personal Bio" rows="5" cols="50" maxlength="255"></textarea>
+          </div>
+      </div>
+
+      <div class = "info_section">
+          <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Personal Info: </h2>
+          <div style="padding-left: 15px;">
+              <ul class="list-unstyled">
+                  <li>
+                    <p>Occupation: </p>
+                    <textarea id="newOccupation" name="Occupation" rows="1" cols="50"maxlength="50"></textarea>
+                  </li>
+                  <li>
+                      <p>Education: </p>
+                      <textarea id="newEducation" name="Occupation" rows="1" cols="50"maxlength="50"></textarea>
+                  </li>
+                  <li>
+                      <p>Lives In: </p>
+                      <textarea id="newLives_in" name="Occupation" rows="1" cols="50"maxlength="50"></textarea>
+                  </li>
+                  <li>
+                      <p>Hometown: </p>
+                      <textarea id="newIs_from" name="Occupation" rows="1" cols="50" maxlength="50"></textarea>
+                  </li>
+              </ul>
+          </div>
         </div>
-         <input type="name" class="form-control" name="name" id="name" placeholder= <%=name%> required>
-       </div>
-       <button type="submit" id="edit">Change Name</button>
-      </form>
-      <form action='/edit_email' method='POST' style="max-width:384px; margin: 0 auto;">
-        <div class="form-group">
-          <div style="text-align:center">
-           <label for="email">E-mail</label>
-         </div>
-          <input type="email" class="form-control" name="email" id="email" placeholder= <%=email%> required>
-        </div>
-        <button type="submit" id="edit">Change E-mail</button>
-      </form>
-      <form action='/change_password', method='GET', style="max-width:384px; margin: 0 auto;"> <!-- /Edit is not yet implemented-->
-        <div>
-            <button type="submit" id="edit">Change Password</button>
-        </div>
-    </form>
+
+      <div class = "info_section">
+          <h2 style="border-bottom: 1px solid #6d6d6d; padding-left: 10px;"> Contact Information: </h2>
+            <div style="padding-left: 15px;">
+                <ul class="list-unstyled">
+                    <li>
+                        <p>Phone: </p>
+                        <textarea id="newPhone" name="Occupation" rows="1" cols="50" maxlength="20"></textarea>
+                    </li>
+                    <li>
+                      <p>Email: </p>
+                      <textarea id="newPublic_email" name="Occupation" rows="1" cols="50" maxlength="50"></textarea>
+                  </li>
+                </ul>
+            </div>
+      </div>
+
+      <script>
+        var infoArray = <%- info %>; //array of info 
+        document.getElementById('newBio').placeholder = infoArray.bio;
+        document.getElementById('newOccupation').placeholder = infoArray.occupation;
+        document.getElementById('newEducation').placeholder = infoArray.education;
+        document.getElementById('newLives_in').placeholder = infoArray.lives_in;
+        document.getElementById('newIs_from').placeholder = infoArray.is_from;
+        document.getElementById('newPhone').placeholder = infoArray.phone;
+        document.getElementById("newPublic_email").placeholder=infoArray.public_email;
+
+        function post(params, method) {
+          console.log('it works kinda');
+          method = method || "post"; // Set method to post by default if not specified.
+
+          // The rest of this code assumes you are not using a library.
+          // It can be made less wordy if you use one.
+          var form = document.createElement("form");
+          form.setAttribute("method", method);
+
+          for(var key in params) {
+            if(params.hasOwnProperty(key)) {
+              console.log('within post: '+ key + params[key] + '\n');
+              if (params[key] ===''){
+                params[key] = document.getElementById(key).placeholder; 
+              }
+              var hiddenField = document.createElement("input");
+              hiddenField.setAttribute("type", "hidden");
+              hiddenField.setAttribute("name", key);
+              hiddenField.setAttribute("value", params[key]);
+              form.appendChild(hiddenField);
+            }
+          }
+
+          document.body.appendChild(form);
+          form.submit();
+        };
+
+        function submitAllInfo(){
+          //if the a value was never inputted and not updated here, it will be stored as the string 'null' instead of NULL. which is okay since checking to see if a value is NULL or 'null' is the same.
+          post({
+            newBio: document.getElementById('newBio').value,
+            newOccupation: document.getElementById('newOccupation').value,
+            newEducation: document.getElementById('newEducation').value,
+            newLives_in: document.getElementById('newLives_in').value,
+            newIs_from: document.getElementById('newIs_from').value,
+            newPhone: document.getElementById('newPhone').value,
+            newPublic_email: document.getElementById('newPublic_email').value
+          });
+        }
+
+      </script>
+
+      <button class = 'buttons' id = 'submitButton'> Submit </button>
+      <button class = 'buttons' style='background-color:grey !important;' onclick='window.location.assign("/profile")' > Cancel </button>
+
+
+      <script>
+        document.getElementById('submitButton').addEventListener('click', function(e){
+          submitAllInfo();
+        })
+      </script>
+      
     </div>
   </main>
   <footer>

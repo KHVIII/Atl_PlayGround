@@ -11,10 +11,12 @@
       </div>
       <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
+          <li <% if (page == 0) {%> class="active" <% } %>><a href="tag">Tag Photos</a> </li>
           <li <% if (page == 1) {%> class="active" <% } %>><a href="profile">My Profile</a></li>
+          <li <% if (page == 5) {%> class="active" <% } %>><a href="community">Leaderboard</a></li>
           <li <% if (page == 2) {%> class="active" <% } %>><a href="past_studies">Past Studies</a></li>
-          <li <% if (page == 0) {%> class="active" <% } %>><a href="index">About</a></li>
-          <li <% if (page == 3) {%> class="active" <% } %>><a href="contact">Contact</a></li>
+          <li <% if (page == 3) {%> class="active" <% } %>><a href="index">About</a></li>
+          <li <% if (page == 4) {%> class="active" <% } %>><a href="contact">Contact</a></li>
         </ul>
         <%- include('../partials/navright-'.concat(auth?'':'no').concat('auth')) %>
       </div><!--/.nav-collapse -->

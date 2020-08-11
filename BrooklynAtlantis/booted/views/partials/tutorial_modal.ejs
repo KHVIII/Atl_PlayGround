@@ -1,0 +1,182 @@
+<!-- Delete All Tags Window-->
+<div class="modal fade" id="deleteAllTags" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteAllTagsLabel">Delete All Tags</h5>
+        </div>
+        <div class="modal-body">
+          <h5> Wow, are you sure you want to delete all of the tags in this picture?</h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick = "v.deleteAllHS()">Yes</button>
+          <!-- v.deleteAllHS() is a function inside dev_pannellum-->
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Submit ALl Tags Window-->
+<div class="modal fade" id="submitAllTags" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="submitAllTagsLabel">Submit All Tags</h5>
+      </div>
+      <div class="modal-body">
+        <h5 id='submitTagsText'> So, you are satisfied with all the tags you have created for this image and is ready to move on to the next image? (You WON'T be able to come back to this image later)</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick = "submitAll()">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete One Tag Window ('trigged by double click event on the generated tags, for more details, follow the function createHotSpot() in 'dev_pannellum.js'  -->
+  <div class="modal fade" id="deleteOneTag" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteTagLabel">Delete Single Tag</h5>
+        </div>
+        <div class="modal-body">
+          <h5 id="deleteOneTagText"> Do you want to delete the tag </h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id = "deleteOneTagButton">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Create One Tag Window ('Triggered by the contextmenu event on the viewer, for more details, follow the function rightClickHS() in 'dev_pannellum.js'-->
+  <script>
+    var max_chars = 25;
+  </script>
+
+  <div class="modal fade" id="createOneTag" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createOneTagLabel">Name the Tag</h5>
+        </div>
+        <div class="modal-body">
+          <h5> How would you describe the object you just tagged? (max <script>document.write(max_chars)</script> characters)</h5> <br>
+          <input type="text" class = "form-control field">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" disabled='true' style='cursor:not-allowed;'>Cancel</button>
+          <button type="button" class="btn btn-primary" id = "createOneTagButton">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  //limiting the chars entered to max_chars
+    $('#createOneTag').find(".field").keydown( function(e){
+      if ($(this).val().length >= max_chars) { 
+        $(this).val($(this).val().substr(0, max_chars));
+      }
+    });
+    $('#createOneTag').find(".field").keyup( function(e){
+      if ($(this).val().length >= max_chars) { 
+        $(this).val($(this).val().substr(0, max_chars));
+      }
+    });
+
+  //after the modal is hidden, we clean up the input field
+    $('#createOneTag').on('hidden.bs.modal', function (e) {
+      $('#createOneTag').find(".field").val('');
+    });
+  </script>
+
+
+  
+<!-- Unfinished Tutorial Window-->
+  <link rel="preload" href="360images/img1.jpg" as="image">
+  <link rel="preload" href="360images/img2.jpg" as="image">
+  <link rel="preload" href="360images/img3.jpg" as="image">
+  <link rel="preload" href="360images/img4.jpg" as="image">
+  <link rel="preload" href="360images/img5.jpg" as="image">
+  <link rel="preload" href="360images/img6.jpg" as="image">
+
+
+
+  <div class="modal fade bd-example-modal-lg" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aira-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Tutorial</h5>
+        </div>
+        <div class="modal-body">
+          <!-- <div style="text-align:center; margin: 0 auto;"><div id="YTplayer"></div></div> -->
+          <p2 id="tutorialParagraph"> Hi, thank you for using the Brooklyn Atlantis Tagging System, this is a short reminder of what you have learned during tutorial. </p2>
+          <img id = "tutorialIMG" src="360images/img1.jpg" width="833">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id = "tutorialPrev" style="visibility:hidden" onclick="prevPage();">Previous</button>
+          <button type="button" class="btn btn-primary" id = "tutorialNext" onclick="nextPage();">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var helpIndex = 0;
+    
+    function loadSmallTutorial(index) {
+        console.log('working');
+        switch (helpIndex) {
+          case 0:
+            $('#tutorialPrev').css('visibility','hidden');
+            $('#tutorialParagraph').html('Hi, thank you for using the Brooklyn Atlantis Tagging System, this page will provide you with a basic tutorial.');
+            $('#tutorialIMG').attr('src', '360images/img1.jpg');
+            break;
+          case 1:
+            let loadPic = new Promise(function(resolve,reject){
+              $('#tutorialIMG').attr('src', '360images/img2.jpg');
+              resolve();
+            })
+            loadPic.then(function(){
+              $('#tutorialPrev').css('visibility','visible');
+              $('#tutorialParagraph').html('Step One');
+            });
+            break;
+          case 2:
+            $('#tutorialParagraph').html('Step two');
+            $('#tutorialIMG').attr('src', '360images/img3.jpg');
+            break;
+          case 3:
+            $('#tutorialParagraph').html('Step three');
+            $('#tutorialIMG').attr('src', '360images/img4.jpg');
+            break;
+          case 4:
+            $('#tutorialNext').html('Next');
+            $('#tutorialParagraph').html('Step four');
+            $('#tutorialIMG').attr('src', '360images/img5.jpg');
+            break;
+          case 5:
+            $('#tutorialNext').html('Done');
+            $('#tutorialParagraph').html('You have completed the tutorial! Click done to start tagging for real!');
+            $('#tutorialIMG').attr('src', '360images/img6.jpg');
+            break;
+        }
+    }
+
+    function nextPage() {
+      helpIndex +=1;
+      loadSmallTutorial(helpIndex);
+    }
+    
+    function prevPage() {
+      helpIndex -=1;
+      loadSmallTutorial(helpIndex);
+    }
+
+  </script>

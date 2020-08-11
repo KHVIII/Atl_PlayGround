@@ -1,0 +1,85 @@
+
+<script>
+    var lbArray = <%- lbArray %>; //array of users
+    for (index = 0; index < lbArray.length; ++index) {
+        let currUser = lbArray[index];
+        let myTable = document.getElementById('leaderboard');
+
+        //row setup
+        let row = myTable.insertRow();
+        row.className = 'leaderboard-row';
+        row.dataset.currUser = JSON.stringify(currUser);
+
+
+        //actual table set ups below 
+        if (lbArray[index].id === <%- id %> )
+        {
+            row.style.backgroundColor = 'yellow';
+        }
+        let varArray = [currUser.name, currUser.tags_done]
+
+        //add header cell
+        let cell = row.insertCell();
+        let text = document.createTextNode(index+1+ (<%= curr_page %> - 1)*<%= lb_size%> );
+        cell.appendChild(text);
+
+        //get Profile Picture
+        let picCell = row.insertCell();
+        let pic = document.createElement('img');
+        pic.src = 'propics/'+ currUser.profile_picture;
+        pic.className = 'smallprofilestyle';
+        picCell.appendChild(pic);
+
+        //add in name and tags done
+        for (index2 = 0; index2 < varArray.length; ++index2) {
+            let cell = row.insertCell();
+            let text = document.createTextNode(varArray[index2]);
+            cell.appendChild(text);
+        }
+
+        //add row click action
+        row.addEventListener('click',function(e){
+            console.log('clicked on' + row.dataset.currUser);
+            let currUser = JSON.parse(row.dataset.currUser);
+            let userModal = $('#userProfileModal');
+            delete currUser.id;
+            console.log(currUser);
+            
+            userModal.find('.modal-title').text(currUser.name+"'s Profile");
+            let profileSetUp = new Promise (function(resolve,reject){
+                for (var keys in currUser){
+                    if (keys == 'profile_picture'){
+                        $('#profile_picture').attr('src','propics/'+currUser[keys]);
+                    } else if (currUser[keys] != 'null') {
+
+                        $('#'+keys).text(currUser[keys]);
+                    }
+                }
+                resolve();
+            });
+
+            profileSetUp.then(function(){
+                userModal.modal()
+            });
+            
+        });
+        
+        
+    }
+
+    if ( <%=curr_page%> == 1) {
+        document.getElementById('prev').style.visibility='hidden';
+        document.getElementById('first').style.visibility='hidden';
+    } 
+    if ( <%=curr_page%> == <%=max_page%>) {
+        document.getElementById('next').style.visibility='hidden';
+        document.getElementById('last').style.visibility='hidden';
+    }
+    function goToPage(e){
+        if (e.key == 'Enter') {
+            window.location.assign('community.'+$('#scoreboard').find('.pageCtrl').val());
+        }
+    }
+
+    
+</script>

@@ -7,6 +7,8 @@ var express          = require('express');
 // through app
 var app              = express();
 
+const {check, validationResult} = require('express-validator');
+
 // Start the server and send it the express object
 // This needs a listening part
 // https://stackoverflow.com/a/38063557
@@ -29,12 +31,21 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 var cookieParser     = require('cookie-parser');
 var session          = require('express-session');
 
+//this is for socket and passport sharing the same session with user object.
+var passportSocketIO = require('passport.socketio');
+
 // Load Redis session storage for express
 // No clue what that means but it requires Redis to also
 // be loaded and I don't see it here, maybe indirectly?
 // Redis
 // https://en.wikipedia.org/wiki/Redis
+
+//var redis = require('redis');
 var RedisStore       = require('connect-redis')(session);
+//var redisClient = redis.createClient();
+// https://github.com/NodeRedis/node-redis
+//var sessionStore = new RedisStore({host:'127.0.0.1:8080'});
+
 
 // This one is currently depracted, it is used to make
 // http calls 
@@ -43,6 +54,17 @@ var request          = require('request');
 var bodyParser       = require('body-parser');
 //	mysql database module 
 var mysql            = require('mysql');
+
+var mySQLStore = require('connect-mysql')(session),
+    sqlStoreOptions = {
+      config: {
+        user: 'root',
+        password: 'atlantis2020',
+        database: 'Eager'
+      },
+      cleanup: true
+    };
+var sessionStore = new mySQLStore(sqlStoreOptions);
 
 // Password hashing utilities
 var bcrypt           = require('bcrypt-nodejs');
@@ -59,8 +81,14 @@ var async = require('async');
 //native crypto for token generation
 var crypto = require('crypto');
 
-var DEV              = false;
+//handling user file uploads (pro pic upload)
+var formidable = require('formidable');
 
+var DEV              = false;
+const fs = require('fs');
+const { resolve } = require('path');
+const e = require('express');
+const { transformAuthInfo } = require('passport');
 // This is needed to allow the website itself to log in to 
 // the MYSQL database
 var db_config = {
@@ -179,11 +207,7 @@ handleDisconnect();
 app.use(cookieParser());
 app.use(flash());
 
-// Creates an object RedisStore with host - localhost
-// https://github.com/NodeRedis/node-redis
-// host: IP address of the REdis server, this may have to be changed?
-// Yeah, this may be why I can't do anything aside from localhost 
-var sessionStore = new RedisStore({host: '127.0.0.1'});
+
 
 // Middleware for parsing incoming request bodies
 // https://github.com/expressjs/body-parser
@@ -199,7 +223,7 @@ app.use(session({
   resave: false,
   // Do not save a new session that was not modified
   saveUninitialized: false,
-  //store: sessionStore,
+  store: sessionStore,
   // Cookie settings (one cookie per user)
   cookie: {
 	// This means the cookie will be kept for a week
@@ -224,7 +248,9 @@ app.use('/scripts', express.static(__dirname + '/newpub/scripts'));
 //app.use('/styles',  express.static(__dirname + '/newpub/css'));
 app.use('/images',  express.static(__dirname + '/newpub/images'));
 app.use('/360images', express.static(__dirname + '/newpub/360images')) //this handles serving file from directory to server. 
-app.use('/css',     express.static(__dirname + '/booted/css'))
+app.use('/css',     express.static(__dirname + '/booted/css'));
+app.use('/propics', express.static(__dirname + '/public/propics')); //user uploaded pro pic
+app.use('/socket.io',express.static(__dirname + '/node_modules/socket.io'))
 
 // Templeates for HTML files automatically turned into HTML 
 // at runtime
@@ -282,14 +308,19 @@ passport.use('local-signup', new LocalStrategy({
 function(req, email, password, done) {
   //connection.connect();
   connection.query({
-    sql: 'SELECT * FROM `auth` WHERE `email` = ?',
-    values: [email]
+    sql: "SELECT * FROM `auth` WHERE `email` = ? OR 'name' = ?",
+    values: [email, req.body.name]
   }, function(err, rows) {
       if (err)
         return done(err);
 
-      if (rows[0]) //user exists
-        return done(null, false, req.flash('err', 'That email is already taken.'));
+      if (rows[0]){ //user exists
+        if (rows[0].name == req.body.name) {
+          return done(null, false, req.flash('err', 'That name is already taken.'));
+        } else {
+          return done(null, false, req.flash('err', 'That email is already taken.'));
+        }
+      }
 
       else { //user does not exist
         var newUser = new Object();
@@ -304,10 +335,11 @@ function(req, email, password, done) {
           if (err) throw err;
           newUser.id = rows.insertId;
           //connection.end();'
-          var terms = req.session.terms? 1:0;
+          var currentdate = new Date(); 
+          var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear();
           connection.query({
-            sql: "INSERT INTO experiment (id, consent) VALUES (?, ?)",
-            values: [newUser.id, terms]
+            sql: "INSERT INTO userInfo (id, email, name, reg_date, recent_log_in) VALUES (?, ?, ?, ?, ?)",
+            values: [newUser.id, email, newUser.name, datetime, datetime]
           }, function(err, rows) {
             if (err) throw err;
           });
@@ -350,7 +382,21 @@ passport.use('local-login', new LocalStrategy({
           user.password = rows[0].password;
           user.name     = rows[0].name;
           user.pics_done = rows[0].pics_done;
-		  return done(null, user);
+          var currentdate = new Date(); 
+          var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
+          
+          connection.query({
+            sql:'UPDATE userInfo SET recent_log_in = ? WHERE id = ?',
+            values: [datetime,user.id]
+          }, function (err, rows) {
+            if (err){
+              console.log('User Log in updating recent-log-in error: ' + err);
+              return done(null, user);
+            } else {
+              testId = user.id;
+              return done(null, user);
+            }
+          });
         }
       }
     });
@@ -455,11 +501,11 @@ app.use(passport.session());
 
 // Client reaching the home page
 app.get('/', function(req, res) {
-  req.session.lastPage = '/index';
-  res.render('pages/index', {
-    auth: req.isAuthenticated(),
-    page: 0 //the page thing is used to tell the header which section should be highlighted AKA which page we are currently on
-  });
+  if (req.isAuthenticated() == 1) {
+    res.redirect('/profile');
+  } else {
+    res.redirect('/index');
+  }
 });
 
 // First string sprcifies the target of the
@@ -478,19 +524,10 @@ app.get('/index', function(req, res) { //this will be the 'About' page
   req.session.lastPage = '/index';
   res.render('pages/index', {
     auth: req.isAuthenticated(),
-    page: 0
+    page: 3
   });
 });
 
-app.get('/profile', mustBeLoggedIn, function(req, res) { //this will be the 'Profile' Page ONLY ACCESSIBLE IF AUTHENTICATED
-  req.session.lastPage = '/profile';
-  res.render('pages/profile', {
-    auth: req.isAuthenticated(),
-    page: 1,
-    errmsg:req.flash('err'),
-    name: req.user.name
-  });
-});
 
 
 
@@ -534,7 +571,7 @@ app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
   req.session.lastPage = '/contact';
   res.render('pages/contact', {
     auth: req.isAuthenticated(),
-    page: 3
+    page: 4
   });
 });
 
@@ -542,11 +579,11 @@ app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
 
 app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Page UNDER PROFILE ONLY ACCESSIBLE IF AUTHENTICATED
   req.session.lastPage = '/tag';                      //not implemented YET
-
+  
 
 
   connection.query({
-    sql: "SELECT * FROM auth WHERE id = ?",
+    sql: "SELECT * FROM userInfo WHERE id = ?",
     values: [req.user.id]
   }, function(err,rows){
     if (err)
@@ -556,21 +593,56 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
     }
     else
     {
-      let curr_pic_name = "img" + (rows[0].pics_done+1);
-      res.render('pages/tag_test', {
-        auth: req.isAuthenticated(),
-        page: 1,
-        pic: curr_pic_name,
-        errmsg: req.flash('err'),
-      });
+      if ( rows[0].tutorial_completion == 0) {
+        res.render('pages/tag_tutorial',{
+          auth: req.isAuthenticated(),
+          page: 0,
+          pic: 'img1',
+          errmsg: req.flash('err'),
+        });
+      } else {
+        let curr_pic_name = "img" + (rows[0].pics_done+1);
+        res.render('pages/tag_test', {
+          auth: req.isAuthenticated(),
+          page: 0,
+          pic: curr_pic_name,
+          errmsg: req.flash('err'),
+        });
+      }
     }
-  })
+  });
 
 
 });
 
+app.get('/supersecrettutorialfinish', mustBeLoggedIn, function(req,res) {
+  connection.query({
+    sql: 'UPDATE userInfo SET tutorial_completion = 1 WHERE id = ? ',
+    values: [req.user.id]
+  }, function(err,rows){
+    if (err) {
+      console.log('Error while updating user"s finished tutorial status in mysql: ' + err);
+      return (err);
+    } else {
+      res.redirect('/tag');
+    }
+  });
+});
+
 app.post('/tag', mustBeLoggedIn, function(req,res) {
-  var tag_list = JSON.parse(req.body.tag_list);
+  if (!JSON.parse(req.body.tag_list)) 
+  {
+    console.log('User attempts to pass in illegal JSON');
+    res.redirect('/logout'); 
+  }
+
+  let tag_list = JSON.parse(req.body.tag_list);
+  //checks for legal tag_list, if not, log user out 
+  if (( !(Array.isArray(tag_list)) ) || tag_list.length >= 500) {
+    console.log('User attempts to pass in illegal JSON');
+    console.log(tag_list);
+    res.redirect('/logout'); 
+  }
   console.log(tag_list);
   console.log(req.body.pic + typeof req.body.pic);
   console.log('user id: ' + req.user.id );
@@ -607,7 +679,7 @@ app.post('/tag', mustBeLoggedIn, function(req,res) {
         }
         else{
           connection.query({
-            sql:"UPDATE auth SET pics_done = pics_done + 1 WHERE id = ?",
+            sql:"UPDATE userInfo SET tags_done = tags_done + " + tag_list.length + ", pics_done = pics_done + 1 WHERE id = ?",
             values:[req.user.id]
           }, function (err,rows){
             if (err)
@@ -664,7 +736,7 @@ app.post('/signup', alreadyLoggedIn, function(req, res, next) {
     return next();
   }
 },passport.authenticate('local-signup', {
-  successRedirect: '/profile',
+  successRedirect: '/edit1',
   failureRedirect: '/signup',
   failureFlash: true
 }));
@@ -783,13 +855,9 @@ app.get('/reset/:token', alreadyLoggedIn, function(req,res) {
     }
     else {
     // Correct user and password
-        var user = new Object();
-        user.id       = rows[0].id;
-        user.email    = rows[0].email;
-        user.password = rows[0].password;
-        user.name     = rows[0].name;
+        
         res.render('pages/reset', { //if link is valid, direct user to reset.ejs form where they POST new password info.
-          name: user.name, 
+          email: rows[0].email, 
           errmsg: req.flash('err')
         });
     
@@ -860,23 +928,68 @@ app.post('/reset/:token', function(req, res) { //submitted reset form, we test t
   });
 });
 //-----------------------------------------------Editing Profile-------------
-app.get('/edit', mustBeLoggedIn, function(req,res) {
-  res.render('pages/edit', {
-    name: req.user.name,
-    email: req.user.email,
-    errmsg: req.flash('err'),
-    auth: req.isAuthenticated(),
-    page:1
-  })
+app.get('/edi:ending', mustBeLoggedIn, function(req,res) {
+  connection.query({
+    sql: 'SELECT * FROM userInfo WHERE id = ?',
+    values: [req.user.id]
+  }, function(err,rows){
+    if (err){
+      console.log('Editing User Info Error: ' + err);
+      return (err);
+    }
+    else {
+      delete rows[0]['id'];
+      console.log(rows[0]);
+      let infoObj = JSON.stringify(rows[0]);
+      if (req.params.ending == 't') {
+        res.render('pages/edit', {
+          page: -1,
+          auth: 1,
+          errmsg: req.flash('err'),
+          first_time: 0,
+          info: infoObj //JSON array containing all current user info
+        });
+      } else if (req.params.ending == 't1'){
+        res.render('pages/edit', {
+          page: -1,
+          auth: 1,
+          errmsg: req.flash('err'),
+          first_time: 1,
+          info: infoObj //JSON array containing all current user info
+        });
+      } else {
+        console.log('edi error: ' + req.params.ending);
+        res.redirect('/profile');
+      }
+    }
+  });
 });
 
-//app.post('/edit_name', function(req,res))
+
+
+app.post('/edit', function(req,res) {
+  console.log(req.body.newBio);
+  console.log(req.body.newOccupation);
+  connection.query({
+    sql:'UPDATE userInfo SET bio = ?, occupation = ?, education = ?, lives_in = ?, is_from = ?, phone = ?, public_email = ? WHERE id = ?',
+    values: [req.body.newBio, req.body.newOccupation, req.body.newEducation, req.body.newLives_in, req.body.newIs_from, req.body.newPhone, req.body.newPublic_email, req.user.id]
+  }, function(err, rows) {
+    if (err){
+      console.log('User update information into SQL POST method error: ' + err);
+      return (err);
+    } else {
+      req.flash('err', 'Public Profile Updated Successfully');
+      res.redirect('/profile');
+    }
+
+  })
+});
 
 
 //------------------------------------------------Change Password (this is when I am already logged in) ------------------------------------
 app.get('/change_password', mustBeLoggedIn, function(req,res) {
   res.render('pages/reset', {
-    name: req.user.name, 
+    email: req.user.email, 
     errmsg: req.flash('err')
   })
 });
@@ -896,8 +1009,322 @@ app.post('/change_password', mustBeLoggedIn, function(req,res){
 
     req.flash('err','Password Updated!');
     res.redirect('/profile');
+});
+
+
+
+//------------------------------------------------Profile Stuff -------------------------------------------------------------
+//https://github.com/harshittpandey/friendreq-system/blob/master/views/
+
+
+//this will be the 'Profile' Page ONLY ACCESSIBLE IF AUTHENTICATED
+app.get('/profile', mustBeLoggedIn, function(req, res) { 
+  req.session.lastPage = '/profile';
+  connection.query({ 
+    sql: "SELECT * FROM userInfo WHERE id = ?",
+    values:[req.user.id]  
+  }, function(err, rows){
+    if (err){ 
+      console.log('Error when getting auth column in profile' + err);
+      return(err);
+    //no error, load the page with user uploaded picture, if no pictures were uploaded, the value for pic will be 'default.jpg'
+    } else {
+      delete rows[0]['id'];
+      delete rows[0]['email'];
+      let profile_pic = rows[0].profile_picture;
+      delete rows[0].profile_picture;
+      console.log(rows[0]);
+      let infoObj = JSON.stringify(rows[0]);
+
+      res.render('pages/profile_v2', {
+        auth: req.isAuthenticated(),
+        page: 1,
+        errmsg:req.flash('err'),
+        pic: profile_pic,
+        info: infoObj //user public information
+      });
+    }
   });
 
+  /*
+  let getTop10 = new Promise (function(resolve, reject){
+    connection.query({
+      sql:"SELECT * FROM userInfo ORDER BY tags_done DESC LIMIT 10",
+      values:[]
+    }, function(err,rows){
+      if (err){
+        console.log('Profile getting scoreboard from mysql error' + err);
+        return (err);
+      } else {
+        console.log(rows);
+        var top10JSON = JSON.stringify(rows);
+        console.log(top10JSON);
+        resolve(top10JSON);
+      }
+    });
+  });
+
+  //mysql query to get profile_picture
+
+  getTop10.then(function(JSON10){
+    connection.query({ 
+      sql: "SELECT * FROM userInfo WHERE id = ?",
+      values:[req.user.id]  
+    }, function(err, rows){
+      //if the mysql query is giving back an error for some reason (should not happen since already logged in), we ignore user profile picture and render the page with default profile picture
+      if (err){ 
+        console.log('Error when getting auth column in profile' + err);
+        res.render('pages/profile', {
+          auth: req.isAuthenticated(),
+          page: 1,
+          errmsg:req.flash('err'),
+          name: req.user.name,
+          pic: 'default.jpg',
+          lbArray: JSON10
+        });
+      
+      //no error, load the page with user uploaded picture, if no pictures were uploaded, the value for pic will be 'default.jpg'
+      } else {
+        res.render('pages/profile', {
+          auth: req.isAuthenticated(),
+          page: 1,
+          errmsg:req.flash('err'),
+          name: req.user.name,
+          pic: rows[0].profile_picture,
+          lbArray: JSON10
+        });
+      }
+    });
+  });
+  */
+
+});
+
+//this is for processing the profile picture the user will send to the server
+app.post('/upload_propic', mustBeLoggedIn, function(req,res){
+  //have a promise to generate a token and this token will be used for the filename. The reason for this is so if user uploads two pictures back to back, with the same name, no errors occur between deletion and replacement.
+  //a better solution could be done in async fashion, but this works and it's good practice to not let user name our files.
+  
+  let generateToken = new Promise (function(resolve,reject){
+    crypto.randomBytes(20, function(err, buf) {
+      var token = buf.toString('hex');
+      resolve(token);
+    });
+  });
+
+  //use the promise 
+  generateToken.then(function(token){
+    //use formidable to process our form 
+    var newfilename;
+    var form = new formidable.IncomingForm();
+    form.parse(req);
+    var reqPath= path.join(__dirname, '../');
+    
+    //this function is ran before the file is stored server-side.
+    //check the extension only, no need further validation
+    form.on('fileBegin', function(name, file){ 
+      if(!file.name || file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+      //outer mysql query before file is added onto server to check if the user already have a profile picture on record in mysql.
+      connection.query({
+        sql: "SELECT * FROM userInfo WHERE id = ?",
+        values: [req.user.id]
+      }, function(err, rows) {
+        if (err) {
+          console.log('checking user propic mysql error' + err);
+          req.flash('err','Something went wrong, please try again later.');
+          res.redirect('/profile');
+          reject();
+        }
+        else { 
+          //if the user does have a prev pro pic, we delete the file
+          if (! (rows[0].profile_picture === 'default.jpg')) {  
+            fs.unlink(reqPath+'BrooklynAtlantis/public/propics/' + rows[0].profile_picture, function (err, stats){
+              if (err) {
+                console.log('Error at deleting user previous pic' + err);
+                req.flash('err','Something went wrong, please try again later.');
+                res.redirect('/profile');
+                reject();
+              }
+            });
+          }
+          //if the user does not have a previous profile picture, we don't do anything here
+        }
+      }); 
+  
+      //after mysql is set up, we tell formidable the path and the name of our file through file.path, the var newfilename is only for us to keep record
+      file.path = reqPath + 'BrooklynAtlantis/public/propics/' + req.user.id + '_' + token + '_' + file.name;
+      newfilename = req.user.id + '_' + token + '_'+ file.name;
+      } else {
+        //this happens when extension check fails AKA user uploads something bad.
+        console.log(file.name + ' is not allowed');
+        req.flash('err','Only jpg,png,jpeg,gif files are accepted, please try again.')
+        res.redirect('/profile');
+        reject();
+      }
+    });
+    
+    //this function runs when the file is uploaded to the server
+    form.on('file', function(name, file) {
+      //we update the mysql query with the new picture name that is uploaded.
+      connection.query({
+        sql: "UPDATE userInfo SET profile_picture = ? WHERE id = ?",
+        values: [newfilename, req.user.id]
+      }, function(err, rows) {
+        if (err) { 
+          console.log('Error changing the user pro pic record after pro pic upload' + err);
+          req.flash('err','Error on mysql updating with new profile picture');
+          res.redirect('/profile');
+          reject();
+        }else{
+          fs.chmodSync(file.path, '666'); //this command make the file read-write only (cannot execute) by default 
+          req.flash('err', 'Profile Picture Successfully Updated!');
+          res.redirect('/profile');
+        }
+      });
+    });
+  });
+  
+  /*
+  deletePreviousProfPic.then(function(){
+    form.on('fileBegin', function(name, file){
+      if(!file.name || file.name.match(/\.(jpg|jpeg|png)$/i)) {
+        file.path = reqPath + 'BrooklynAtlantis/public/propics/' + req.user.id + '_' + file.name;
+        newfilename = req.user.id +'_'+ file.name;
+        resolve();
+      }
+      else {
+        console.log(part.filename + ' is not allowed');
+        reject();
+      }
+    });
+  }).then(function(){
+    console.log('new file name:' + newfilename);
+    connection.query({
+      sql: "UPDATE auth SET profile_picture = ? WHERE id = ?",
+      values: [newfilename, req.user.id]
+    }, function(err, rows) {
+      if (err) {
+        console.log('Error changing the user pro pic record after pro pic upload' + err);
+        return (err);
+      }else{
+        resolve();
+      }
+    });
+  }).then(function(){
+    form.on('file', function(name, file) {
+      req.flash('err', 'Prof Pic Successfully Uploaded');
+      res.redirect('/profile');
+    });
+  });
+  */
+});
+
+//---------------------------------------------------------------------------Community - Searching / Getting Other People's Profile---------------------------------------
+
+const leaderBoardPositionMax = 10; //how many rows in the leaderboard
+app.get('/community', mustBeLoggedIn, function(req,res){
+  res.redirect('/community.1');
+});
+
+app.get('/community-ownRank',mustBeLoggedIn, function(req,res){
+  let userRank;
+  let userPage; 
+  let getUserRank = new Promise(function(resolve,reject){
+    connection.query({
+      sql:'SELECT x.id, x.position, x.name FROM (SELECT userInfo.id, userInfo.name, @rownum := @rownum + 1 AS position FROM userInfo JOIN (SELECT @rownum := 0) r ORDER BY userInfo.tags_done DESC) x WHERE x.id = ?',
+      values:[req.user.id]
+    }, function(err,rows){
+      if (err){
+        console.log('error when trying to get position at own rank: ' + err);
+        reject(err);
+      } else {
+        userRank = parseInt(rows[0].position);
+        userPage = Math.ceil(userRank/leaderBoardPositionMax);
+        console.log('rank: ' + userRank + ', page: ' + userPage);
+        resolve();
+      }
+    });
+  });
+
+  getUserRank.then(function(){
+    res.redirect('/community.'+userPage);
+  })
+})
+
+
+app.get('/community.:pageNum', mustBeLoggedIn, [
+  //use express-validator to validate and sanitise req.parameter.otherUsername
+  check('pageNum').isNumeric()
+], function(req, res){
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    //fails validation
+    res.redirect('/community');
+    //return res.status(400).json({ errors: errors.array() });
+    
+  } else{
+    //pass validation
+    let page_index = req.params.pageNum - 1;
+    let currPageNumber = req.params.pageNum;
+    let totalPageNumber;
+    let x = leaderBoardPositionMax; //how many entries in each page of the leaderboard
+    
+    //first get how many entries in the leaderboard, and then calculate out the totalPageNumber
+    let getEntries = new Promise(function(resolve,reject){
+      connection.query({
+        sql:'SELECT COUNT(*) FROM userInfo',
+        values:[]
+      }, function(err, rows){
+        if (err){
+          console.log('error at getting amount of rows from userInfo for leaderboard: ' + err);
+          reject(err);
+        } else {
+          totalPageNumber = Math.ceil(rows[0]['COUNT(*)'] / x);
+          resolve();
+        }
+      });
+    });
+    
+    //then check that the user's requested page number is legal, if so, we pass that page's content
+    getEntries.then(function(){
+      if (currPageNumber < 1 ){
+        req.flash('err','Invalid Page Number!');
+        res.redirect('/community.1');
+      } else if (currPageNumber > totalPageNumber){
+        req.flash('err','Invalid Page Number!');
+        res.redirect('/community.'+totalPageNumber);
+      } else {
+        connection.query({
+          sql:'SELECT * FROM userInfo ORDER BY tags_done DESC LIMIT ?, ?',
+          values:[page_index*x, x]
+        }, function(err,rows){
+          if (err){
+            console.log('Profile getting scoreboard from mysql error' + err);
+            reject (err);
+          } else {
+            for (let i = 0; i < rows.length; ++i){
+              let obj = rows[i];
+              delete obj.email;
+            }
+            var XJSON = JSON.stringify(rows);
+            console.log(XJSON);
+            res.render('pages/leaderboard', {
+              auth: req.isAuthenticated(),
+              page: 5,
+              errmsg:req.flash('err'),
+              id: req.user.id,
+              lbArray: XJSON,
+              max_page: totalPageNumber,
+              curr_page: currPageNumber,
+              lb_size: x
+            });
+          }
+        });
+      }
+    });
+  }
+});
 
 //---------------------------------------------------------------------------THIS SECTION IS ALL THREAT OR NO THREAT DEMO, USED FOR PAST STUDIES DEMO ONLY, NO DATA SHOULD BE STORED.
 app.get('/practice', function(req, res, next) {
@@ -1140,13 +1567,104 @@ var trueAnswers = ["no_threat","no_threat","no_threat",
   "threat","no_threat","threat","no_threat","threat",
   "threat","no_threat","no_threat"];
 
-http.listen(8080, function(){
-  console.log('listening on *:8080');
-});
+io.use(passportSocketIO.authorize({
+  key: 'connect.sid',
+  secret: 'c813be3ca54af9bb3328e6e7212024a4fa627d15bd138de2ef78a32b7163db4f',
+  store: sessionStore,
+  passport: passport,
+  cookieParser: cookieParser,
+  success: onAuthorizeSuccess,
+  fail: onAuthorizeFail
+}));
+
+
+function onAuthorizeSuccess(data, accept){
+  console.log('successful connection to socket.io');
+ 
+  // The accept-callback still allows us to decide whether to
+  // accept the connection or not.
+  accept(null, true);
+
+}
+ 
+function onAuthorizeFail(data, message, error, accept){
+  if(error)
+    throw new Error(message);
+  console.log('failed connection to socket.io:', message);
+ 
+  // We use this callback to log all of our failed connections.
+  accept(null, false);
+ 
+
+  // see: http://socket.io/docs/client-api/#socket > error-object
+} 
 
 io.on('connection', function(socket){
   console.log('a user connected');
+
+  
+  socket.on('join', function(data){
+    console.log(data);
+    socket.emit('messages', 'communication established for' + socket.request.user.email);
+    console.log(socket.request.user);
+  })
+
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
+
+  // for /signup signup.ejs name check function
+  socket.on('checkRepeatName',function(data){
+    let lookForName = new Promise (function(resolve,reject){
+      console.log('checking originality of the name: ' + data);
+      connection.query({
+        sql:'SELECT * FROM auth WHERE name = ?',
+        values: [data]
+      }, function(err,rows){
+        if (err) {
+          console.log('Error when searching for name: ' + err);
+          reject(err);
+        } else if (rows.length) { //name already exists
+          reject();
+        } else { //name is original
+          socket.emit('isNameOriginal',true);
+          resolve();
+        }
+      });
+    });
+
+    lookForName.catch(function(){
+      socket.emit('isNameOriginal',false);
+    })
+  })
+
+  // for /community leaderboard.ejs search function
+  socket.on('search', function(data){
+    console.log(socket.request.user.name + ' searching for ' + data );
+    let lookForUser = new Promise (function(resolve,reject){
+      connection.query({
+        sql:'SELECT * FROM userInfo WHERE name = ?',
+        values: [data]
+      }, function(err,rows){
+        if (err) {
+          console.log('Error when searching for name: ' + err);
+          reject(err);
+        } else if (!rows.length){ //no name in DB
+          reject();
+        } else { //name exists in DB THIS ASSUMES NAMES ARE UNIQUE
+          socket.emit('searchFound',rows[0]);
+          resolve();
+        }
+      });
+    });
+
+    lookForUser.catch(function(err){
+      socket.emit('searchNotFound', 'NOT FOUND');
+    });
+  });
+
+});
+
+http.listen(8080, function(){
+  console.log('listening on *:8080');
 });

@@ -1,0 +1,157 @@
+<script>
+    var tutorial_stage = 0; //we will use this integer to keep count of which step of the tutorial the user is on right now
+    var enable_delete_hs = false;
+
+    var mouse_move_next_stage = function() {
+        console.log(v.getYaw());
+        if (v.getYaw() < -100 || v.getYaw() > 100) {
+            $('#tutorial_next_button').css('visibility','visible');
+            $('#panorama').removeClass('blink_it');
+            $('.pnlm-dragfix').off('mousemove',mouse_move_next_stage);
+            $(document).mouseup();
+        }
+    }
+
+    var right_click_hs_next_stage = function() {
+        console.log('User right clicked on window');
+        tutorial_stage +=1;
+        $('.pnlm-dragfix').off('contextmenu',right_click_hs_next_stage);
+        loadTutorial();
+    
+    }
+
+    var hs_toggle_next_stage = function() {
+        console.log('User clicked on visibility toggle');
+        tutorial_stage +=1;
+        $('#hs-toggle').off('click',hs_toggle_next_stage);
+        loadTutorial();
+        
+    }
+   
+
+    function loadTutorial() {
+        switch (tutorial_stage) {
+            case 1: 
+                $('#tutorial_next_button').css('visibility','hidden');
+                $('#tutorial_text').text("Great, let's start then. This box in gray highlights is the main Tagging Window. ");
+                $('#tutorial_text_2').text("Please press the ‘Click to start tagging’ button to load an image you have not tagged before.");
+                $('#panorama').toggleClass('blink_it');
+                $('#panorama').css('z-index','1001');
+                break;
+            case 2: 
+                $('#tutorial_text').text("The Tagging Window now displays a 360 round view of a location on the Gowanus Canal. We can look around by dragging the mouse around while holding down left mouse button.");
+                $('#tutorial_text_2').text("Now it's your turn to try it. Take a look around and we will continue.");
+                $('.pnlm-dragfix').on('mousemove',mouse_move_next_stage);
+                break;
+            case 3: 
+                $('#tutorial_text').text("Now that we can look around, we can also zoom in and out to see things more clearly.To zoom in, double click or scroll up. To zoom out while zoomed in, double click again or scroll down.");
+                $('#tutorial_text_2').text("Click next to continue.");
+                break;
+            case 4: 
+                $('#tutorial_next_button').css('visibility','hidden');
+                $('#tutorial_text').text("Fantastic, I feel we can start with our main objective now - tagging objects of interest. To create a tag, first right click on the thing or area you find worthy of interest.");
+                $('#tutorial_text_2').text("Look around the location, and tag something you find interesting by right clicking on them. ");
+                $('#panorama').toggleClass('blink_it');
+                v.toggleRightClick();
+                $('.pnlm-dragfix').on('contextmenu',right_click_hs_next_stage);
+                break;
+            case 5: 
+                $('#panorama').removeClass('blink_it');
+                $('#tutorial_next_button').css('visibility','hidden');
+                $('#tutorial_text').text("Let's give this tag a name shall we?");
+                $('#tutorial_text_2').text("Give the tag a name, and we will continue.");
+                break;
+            case 6: 
+                v.toggleRightClick();
+                $('#tutorial_text').text('If you are unsure of what name you just gave to your tags, you can hover over them to see their names.');
+                $('#tutorial_text_2').text('Try hovering your mouse over the tag you just created!');
+                $('#panorama').toggleClass('blink_it');
+                //check tutorial_pannellum search for '.pnlm-hotspot-base.pnlm-hotspot.pnlm-sprite.pnlm-info.pnlm-pointer.pnlm-tooltip' when you make changes to this step or this step number
+                break;
+            case 7:
+                $('#panorama').toggleClass('blink_it');
+                enable_delete_hs = true;
+                $('#tutorial_next_button').css('visibility','hidden');
+                $('#tutorial_text').text("In case you make a mistake, you can always delete them afterwards by double clicking on them.");
+                $('#tutorial_text_2').text("Before we continue, let's test out what you have learned so far: Move around, find the tag named 'Delete Me!', and delete it! ");
+                v.addHotSpot({"pitch":-27, "yaw":153, "type":"info", "text":'Red Leaf'});
+                v.addHotSpot({"pitch":36, "yaw":121, "type":"info", "text":'White Tower'});
+                v.addHotSpot({"pitch":4, "yaw":-46, "type":"info", "text":'Red Container'});
+                v.addHotSpot({"pitch":10.5, "yaw":140.5, "type":"info", "text":'Delete Me!'});
+                $('#currentTagAmount').html("Current amount of tags created: " + 5);
+                break;
+            case 8:
+                $('#panorama').removeClass('blink_it');
+                $('#tutorial_text').text("Nicely Done. Remember once a tag is deleted, it's gone forever. So it's a good idea to always check the name before deleting them.");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#tutorial_next_button').css('visibility','visible');
+                break;
+            case 9: 
+                enable_delete_hs = false;
+                $('#tutorial_text').text("This purple box highlighted is the tool bar. It displays how many tags we have placed so far. It also has many useful tools.");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#tutorial_next_button').css('visibility','visible');
+                $('#panorama').css('border',0);
+                $('#sidebar').toggleClass('blink_it');
+                break;
+            case 10: 
+                $('#tutorial_next_button').css('visibility','hidden');
+                $('#sidebar').removeClass('blink_it');
+                $('#tutorial_text').text("This button can toggle the visibility of all the tags. It's helpful whenever you want to see what's beneath the tags or just to see the picture without all the tags covering it.");
+                $('#tutorial_text_2').text("Try toggling it and see what difference it makes to the Tagging Window");
+                $('#hs-toggle').on('click',hs_toggle_next_stage);
+                $('#hs-toggle').toggleClass('blink_it');
+                $('#hs-toggle').css('z-index','1001');
+                break;
+            case 11: 
+                $('#tutorial_text').text("Good job. You can toggle the visibility of the tags at anytime and it wouldn't affect the tags or delete them. ");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#tutorial_next_button').css('visibility','visible');
+                break;
+            case 12:
+                $('#hs-toggle').removeClass('blink_it');
+                $('#hs-toggle').css('z-index','999');
+                $('#tutorial_text').text("This button can delete all the tags you have created on this picture so far. Be careful when using this function as the deleted tags cannot be recovered.");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#delete-all-hs').toggleClass('blink_it');           
+                break;
+            case 13: 
+                $('#delete-all-hs').removeClass('blink_it');
+                $('#tutorial_text').text("Once you are finished tagging and are satisfied with everything. Click this button to submit. As of now, you won't be able to go back to re-tag a picture once you have submitted it. So be sure before you submit.");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#tagSubmit').toggleClass('blink_it');           
+                break;
+            case 14: 
+                $('#tagSubmit').removeClass('blink_it');
+                $('#tutorial_text').text("Lastly, if you are confused about a function while tagging, you can always click here for a quick reminder!");
+                $('#tutorial_text_2').text("Click next to continue.");
+                $('#tagHelp').toggleClass('blink_it');
+                $('#tutorial_next_button').css('visibility', 'visible');
+                break;
+            case 15: 
+                $('#tagHelp').removeClass('blink_it');
+                $('#tutorial_text').text("Congratulations, you have finished the tutorial! Now go on and tag!");
+                $('#tutorial_text_2').text("Click done to finish the tutorial.");
+                $('#tutorial_next_button').html('Done');
+                $('#tutorial_next_button').css('visibility', 'visible');
+                break;
+            case 16: //finish, redirect to supersecrettutorialfinish to update mysql that user has completed tutorial
+                window.location.assign('/supersecrettutorialfinish');
+                break;
+        }
+    }
+    $('#tutorial_next_button').click(function(){
+        tutorial_stage += 1;
+        loadTutorial();
+    });
+
+    $('.pnlm-load-button').click(function(){
+        tutorial_stage = 2;
+        loadTutorial();
+    });
+
+    $('#createOneTagButton').on('click',function(){
+        tutorial_stage = 6;
+        loadTutorial();
+    })
+</script>
