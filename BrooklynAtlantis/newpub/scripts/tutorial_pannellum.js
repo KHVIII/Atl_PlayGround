@@ -3311,7 +3311,7 @@ function createHotSpot(hs) {
         a.addEventListener('dblclick', function(e) {
             if (!enable_delete_hs) { return;}
             if (hs.text == 'Delete Me!') {
-                $("#deleteOneTagText").text("Do you wish to delete the tag: " + hs.text +" ?");
+                $("#deleteOneTagText").text("Do you wish to delete the tag: '" + hs.text +"' ?");
                 $("#deleteOneTag").modal({backdrop: 'static', keyboard: false}); 
                 $("#deleteOneTagButton").prop('disabled',false);
                 $("#deleteOneTagButton").unbind().click(function(e) {
@@ -3335,13 +3335,21 @@ function createHotSpot(hs) {
                     deleteTagPromise.then(function(){
                         tutorial_stage += 1;
                         loadTutorial();
+                        /*
+                        $('.d-inline-block').popover('disable');
+                        $('#tutorial_next_button').removeAttr('disabled');
+                        $('#tutorial_next_button').css('pointer-events','all');
+                        $('#tutorial_next_button').toggleClass('blink_it');
+                        $('#tutorial_next_button').css('visibility','visible');
+                        $('#tutorial_text_2').text('Click next to continue.');
+                        */
                     })
 
                     /*tutorial_stage += 1;
                     loadTutorial();*/
                 });
             } else {
-                $("#deleteOneTagText").text("Oops wrong tag, remember to hover over the tags to check their names first before deleting them!");
+                $("#deleteOneTagText").text("Oops wrong tag, remember to hover over the tag to view its content before deleting.");
                 $("#deleteOneTag").modal({backdrop: 'static'}); 
                 $("#deleteOneTagButton").prop('disabled',true);
             }
@@ -3400,8 +3408,14 @@ function createHotSpot(hs) {
         span.style.marginTop = -span.scrollHeight - 12 + 'px';
         $('.pnlm-hotspot-base.pnlm-hotspot.pnlm-sprite.pnlm-info.pnlm-pointer.pnlm-tooltip').on('mouseover',function(){
             if (tutorial_stage == 6) {
-                $('#tutorial_next_button').css('visibility','visible');
-                $('#panorama').removeClass('blink_it');
+                //$('#tutorial_next_button').css('visibility','visible');
+                //$('#panorama').removeClass('blink_it');
+
+                $('.d-inline-block').popover('disable');
+                $('#tutorial_next_button').removeAttr('disabled');
+                $('#tutorial_next_button').css('pointer-events','all');
+                $('#tutorial_next_button').toggleClass('blink_it');
+                $('#tutorial_text_2').text('Click next to continue.');
             }
         });
         

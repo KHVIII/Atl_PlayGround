@@ -22,7 +22,7 @@
 </head>
 <body>
   <header>
-    <% include ../partials/header %>
+    <%- include('../partials/header-'.concat(auth?'':'no').concat('auth')) %>
   </header>
   <main>
     <%- include('../partials/main-jumbotron') %>
@@ -31,48 +31,42 @@
       <form action='/survey' method='POST'>
         <fieldset class="form-group">
           <legend>Lastly, we would appreciate if you could tell us more about you.</legend>
-          <label class="form-check-label">Are you interested in saving the environment (conserving water, turning off the light, using less A/C, etc.)?</label>
-          <% for(var i=0; i<a1.length; i++) {%>
-            <div class="form-check">
-              <label class="form-check-label">
-                <input type="radio" class="form-check-input" name="interest" value=<%= i %> >
-                <%= a1[i] %>
-              </label>
-            </div>
-          <% } %>
+
+          <label class="form-check-label">I care about the environment.</label>
+          <input type="range" class="form-control-range" min = "0" max = "100" id="environment">
 
           <br>
 
-          <label class="form-check-label">What is your highest education level?</label>
-          <% for(var i=0; i<a2.length; i++) {%>
-            <div class="form-check">
-              <label class="form-check-label">
-                <input type="radio" class="form-check-input" name="education" value=<%= i %> >
-                <%= a2[i] %>
-              </label>
-            </div>
-          <% } %>
+          <label class="form-check-label">I enjoy tagging images.</label>
+          <input type="range" class="form-control-range" min = "0" max = "100" id="enjoy"> 
+
+          <br>
+
+          <label class="form-check-label">Brooklyn Atlantis' objective is relevant to my career.</label>
+          <input type="range" class="form-control-range" min = "0" max = "100" id="career">
+
+          <br>
+
+          <label class="form-check-label">The interface is intuitive and easy to use.</label>
+          <input type="range" class="form-control-range" min = "0" max = "100" id="easy">
+
+          <br>
+
+          <label class="form-check-label">I would like to keep contributing to Brooklyn Atlantis.</label>
+          <input type="range" class="form-control-range" min = "0" max = "100" id="enjoy">
 
         </fieldset>
-        <div class="form-group">
-          <label for="zipcode">Please enter your zip code</label>
-          <input type="number" class="form-control" placeholder="Enter zip code" name='zip'>
-        </div>
 
         <br>
-        
+        <!--
         <div class="form-check" style="color:#8C21D1;">
-          <label class="form-check-label">
-            <input type="checkbox" class="form-check-input" name="getresult">
-            (Optional) Email me later my performance of the image classification.
-By checking this, we will email you the score in a month or so after we analyze all participants' data.
-          </label>
           <label class="form-check-label">
             <input type="checkbox" class="form-check-input" name="futurehelp">
              (Optional) Email me about other citizen science projects in the future.
 By checking this, we will email you if we need your help again in the future to improve the Gowanus Canal
           </label>
         </div>
+      -->
 
         <br>
         <div style="text-align:center">

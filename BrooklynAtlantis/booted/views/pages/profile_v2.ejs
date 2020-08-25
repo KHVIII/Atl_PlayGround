@@ -7,7 +7,7 @@
     .content {
       width:100%;
     }
-    #buttons {
+    .buttons {
       background-color: #57068c;
       color: white;
       padding: 14px 20px;
@@ -18,6 +18,11 @@
       padding-top: 10px;
       padding-bottom: 10px;
     }
+    .buttons.blink_it {
+        animation: next_blink 1.5s;
+        animation-iteration-count: infinite;
+    }
+    @keyframes next_blink {50% {background: #56068c62;}}
     img.profilestyle {
       width: 200px;
       height:200px;
@@ -34,30 +39,20 @@
     }
     .wrapper {
       display: flex;
+      flex-wrap: wrap;
       width: 100%;
-      height:100vh;
+      height: 93vh;
       align-items: center;
       align-content: center;
     }
-    #scoreboard {
-      display: flex;
-      min-width: 250px;
-      max-width: 250px;
-      min-height: 80vh;
-      background: #f5f5f5;
-      border-radius: 10px;
-      color: #330662;
-      justify-content: center;
-      align-items: center;
-    }
     #contentbox {
-      width: 200px;
+      width: 25%;
       margin-right: 20px;
     }
     #profile_info{
-        width: 100%;
+        width: 65%;
+        height: 93vh;
         overflow: scroll;
-        height: 100vh;
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
     }
@@ -92,6 +87,12 @@
     #profile_info p{
         font-size: 18px;
     }
+    #navbar {
+        height: 5vh;
+        min-height: 5vh !important;
+    }
+
+
   </style>
 </head>
 <body>
@@ -135,6 +136,7 @@
                         </label>
                         <input type="submit" id = "customsubmit" value="Upload" style="border: 1px solid #2d2d2d ; padding: 6px 12px; cursor: pointer; background-color: #ccc; color: #2d2d2d">
                         </form>
+                        <i>*jpeg,png, and gif formats only.</i>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -148,16 +150,19 @@
                 <!-- <p>Please select from one of the following activities below. </p> -->
                 <form action='/tag', method='GET', style="max-width:200px; margin: 0 auto;"> 
                     <div>
-                        <button type="submit" id="buttons">Tag Pictures</button>
+                        <span class="d-inline-block" data-toggle="popover" data-container="body" data-placement="left" data-content="Click here to start contributing!">
+                            <button type="submit" id = "tagPictures" class="buttons">Tag Pictures</button>
+                        </span>
+
                     </div>
                 </form>
                 <form action='/edit', method='GET', style="max-width:200px; margin: 0 auto;"> <!-- /Edit is not yet implemented-->
                     <div>
-                        <button type="submit" id="buttons">Edit Your Profile / Information</button>
+                        <button type="submit" class="buttons">Edit profile information</button>
                     </div>
                 </form>
                 <div style="max-width:200px; margin: 0 auto;">
-                    <button type="submit" id="buttons" data-toggle="modal" data-target="#changeProfPic">Change Profile Picture</button>
+                    <button type="submit" class="buttons" data-toggle="modal" data-target="#changeProfPic">Change profile picture</button>
                 </div>
             </div>
 
@@ -168,19 +173,19 @@
                     <div style="padding-left: 15px;">
                         <ul class="list-unstyled">
                             <li>
-                                <h5>Last Time Online (UTC): </h5>
+                                <h5>Last time online (UTC): </h5>
                                 <p id='recent_log_in'>-</p>
                             </li>
                             <li>
-                                <h5>Total Number of Pictures Tagged: </h5>
+                                <h5>Total number of pictures tagged: </h5>
                                 <p id='pics_done'>0</p>
                             </li>
                             <li>
-                                <h5>Total Number of Tags Placed: </h5>
+                                <h5>Total number of tags placed: </h5>
                                 <p id='tags_done'>0</p>
                             </li>
                             <li>
-                                <h5>Member Since: </h5>
+                                <h5>Member since: </h5>
                                 <p id='reg_date'>-</p>
                             </li>
                         </ul>
@@ -207,7 +212,7 @@
                                 <p id='education'>-</p>
                             </li>
                             <li>
-                                <h5>Current Location: </h5>
+                                <h5>Current location: </h5>
                                 <p id='lives_in'>-</p>
                             </li>
                             <li>
@@ -233,41 +238,53 @@
                             </ul>
                         </div>
                 </div>
-                <script>
-                    var infoObj = <%- info %>; //array of info 
-                    console.log(infoObj);
-                    for (var keys in infoObj){
-                        if ( infoObj[keys] && infoObj[keys] != 'null' ){
-                            console.log(keys);
-                            document.getElementById(keys).innerHTML = infoObj[keys];
-                        } else {
-                            console.log(keys + 'failed');
-                        }
-                    }
-                    /*
-                    document.getElementById('tags_done').innerHTML = infoObj.tags_done;
-                    document.getElementById('pics_done').innerHTML = infoObj.pics_done;
-                    document.getElementById('reg_date').innerHTML = infoObj.reg_date;
-                    document.getElementById('bio').innerHTML = infoObj.bio;
-                    document.getElementById('occupation').innerHTML = infoObj.occupation;
-                    document.getElementById('education').innerHTML = infoObj.education;
-                    document.getElementById('lives_in').innerHTML = infoObj.lives_in;
-                    document.getElementById('is_from').innerHTML = infoObj.is_from;
-                    document.getElementById('phone').innerHTML = infoObj.phone;
-                    document.getElementById("public_email").innerHTML=infoObj.public_email; */
-                </script>
-              
-            
-                
+
+                <% include ../partials/footer %>
             </div>
         </div>
     </div>
   </main>
   <footer>
-    <% include ../partials/footer %>
+
   </footer>
   <last>
     <% include ../partials/scripts %>
+    <script>
+        var infoObj = <%- info %>; //array of info 
+        console.log(infoObj);
+        for (var keys in infoObj){
+            if ( infoObj[keys] && infoObj[keys] != 'null' ){
+                console.log(keys);
+                $('#'+keys).text(infoObj[keys]); //if there is no object with the id of the keys, this thing does nothing, which is good
+            } else {
+                console.log(keys + 'failed');
+            }
+        }
+        /*
+        document.getElementById('tags_done').innerHTML = infoObj.tags_done;
+        document.getElementById('pics_done').innerHTML = infoObj.pics_done;
+        document.getElementById('reg_date').innerHTML = infoObj.reg_date;
+        document.getElementById('bio').innerHTML = infoObj.bio;
+        document.getElementById('occupation').innerHTML = infoObj.occupation;
+        document.getElementById('education').innerHTML = infoObj.education;
+        document.getElementById('lives_in').innerHTML = infoObj.lives_in;
+        document.getElementById('is_from').innerHTML = infoObj.is_from;
+        document.getElementById('phone').innerHTML = infoObj.phone;
+        document.getElementById("public_email").innerHTML=infoObj.public_email; */
+    </script>
+     <% if (first_time == 2) {%>
+        <script>
+            $("#tagPictures").toggleClass('blink_it');
+            $('.d-inline-block').attr('data-content','Click here to learn how to contribute!');
+            $('.d-inline-block').popover('show');
+        </script>
+    <% } else if (first_time == 1) {%>
+        <script>
+            $("#tagPictures").toggleClass('blink_it');
+            $('.d-inline-block').attr('data-content','Click here to start contributing!');
+            $('.d-inline-block').popover('show');
+        </script>
+    <% } %>
   </last>
 </body>
 </html>

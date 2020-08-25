@@ -84,6 +84,26 @@ var crypto = require('crypto');
 //handling user file uploads (pro pic upload)
 var formidable = require('formidable');
 
+
+//csv writer for survey
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const surveyCsvWriter = createCsvWriter({
+  path:'public/survey.csv',
+  header: [
+    {id:'id',title:'id'},
+    {id:'environment',title:'environment'},
+    {id:'enjoy',title:'enjoy'},
+    {id:'career',title:'career'},
+    {id:'contribution',title:'contribution'}
+  ],
+  append: true
+});
+
+//objects to csv
+const objectsToCSV = require('objects-to-csv');
+
+
+
 var DEV              = false;
 const fs = require('fs');
 const { resolve } = require('path');
@@ -223,7 +243,7 @@ app.use(session({
   resave: false,
   // Do not save a new session that was not modified
   saveUninitialized: false,
-  store: sessionStore,
+  //store: sessionStore,
   // Cookie settings (one cookie per user)
   cookie: {
 	// This means the cookie will be kept for a week
@@ -343,7 +363,14 @@ function(req, email, password, done) {
           }, function(err, rows) {
             if (err) throw err;
           });
-
+          fs.mkdir('./public/datasets/user'+newUser.id, function(err){
+            if (err){
+              console.log("error when fs creating a folder for sign up user: " + err);
+              throw(err);
+            } else {
+              console.log("poggers");
+            }
+          });
           return done(null, newUser);
         });
 
@@ -598,7 +625,7 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
           auth: req.isAuthenticated(),
           page: 0,
           pic: 'img1',
-          errmsg: req.flash('err'),
+          errmsg: req.flash('err')
         });
       } else {
         let curr_pic_name = "img" + (rows[0].pics_done+1);
@@ -607,6 +634,7 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
           page: 0,
           pic: curr_pic_name,
           errmsg: req.flash('err'),
+          id: req.user.id
         });
       }
     }
@@ -719,6 +747,7 @@ app.post('/login', passport.authenticate('local-login', {
 
 
 app.get('/signup', alreadyLoggedIn, function(req, res) {
+  req.session.lastPage = '/signup';
   res.render('pages/signup', {
     auth: req.isAuthenticated(),
     errmsg: req.flash('err'),
@@ -736,7 +765,7 @@ app.post('/signup', alreadyLoggedIn, function(req, res, next) {
     return next();
   }
 },passport.authenticate('local-signup', {
-  successRedirect: '/edit1',
+  successRedirect: '/edit',
   failureRedirect: '/signup',
   failureFlash: true
 }));
@@ -928,7 +957,7 @@ app.post('/reset/:token', function(req, res) { //submitted reset form, we test t
   });
 });
 //-----------------------------------------------Editing Profile-------------
-app.get('/edi:ending', mustBeLoggedIn, function(req,res) {
+app.get('/edit', mustBeLoggedIn, function(req,res) {
   connection.query({
     sql: 'SELECT * FROM userInfo WHERE id = ?',
     values: [req.user.id]
@@ -941,7 +970,8 @@ app.get('/edi:ending', mustBeLoggedIn, function(req,res) {
       delete rows[0]['id'];
       console.log(rows[0]);
       let infoObj = JSON.stringify(rows[0]);
-      if (req.params.ending == 't') {
+      if (!req.session.lastPage == '/signup') {
+        console.log(req.session.lastPage);
         res.render('pages/edit', {
           page: -1,
           auth: 1,
@@ -949,7 +979,7 @@ app.get('/edi:ending', mustBeLoggedIn, function(req,res) {
           first_time: 0,
           info: infoObj //JSON array containing all current user info
         });
-      } else if (req.params.ending == 't1'){
+      } else {
         res.render('pages/edit', {
           page: -1,
           auth: 1,
@@ -957,9 +987,6 @@ app.get('/edi:ending', mustBeLoggedIn, function(req,res) {
           first_time: 1,
           info: infoObj //JSON array containing all current user info
         });
-      } else {
-        console.log('edi error: ' + req.params.ending);
-        res.redirect('/profile');
       }
     }
   });
@@ -1019,6 +1046,7 @@ app.post('/change_password', mustBeLoggedIn, function(req,res){
 
 //this will be the 'Profile' Page ONLY ACCESSIBLE IF AUTHENTICATED
 app.get('/profile', mustBeLoggedIn, function(req, res) { 
+  let lastPage = req.session.lastPage;
   req.session.lastPage = '/profile';
   connection.query({ 
     sql: "SELECT * FROM userInfo WHERE id = ?",
@@ -1036,13 +1064,34 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
       console.log(rows[0]);
       let infoObj = JSON.stringify(rows[0]);
 
-      res.render('pages/profile_v2', {
-        auth: req.isAuthenticated(),
-        page: 1,
-        errmsg:req.flash('err'),
-        pic: profile_pic,
-        info: infoObj //user public information
-      });
+      if (rows[0].tutorial_completion == 0) {
+        res.render('pages/profile_v2', {
+          auth: req.isAuthenticated(),
+          page: 1,
+          errmsg:req.flash('err'),
+          pic: profile_pic,
+          info: infoObj, //user public information
+          first_time: 2 //this means user has not even done tutorial yet
+        });
+      } else if (rows[0].pics_done == 0) {
+        res.render('pages/profile_v2', {
+          auth: req.isAuthenticated(),
+          page: 1,
+          errmsg:req.flash('err'),
+          pic: profile_pic,
+          info: infoObj, //user public information
+          first_time: 1 //this means user has not done real tutorials yet
+        });
+      } else {
+        res.render('pages/profile_v2', {
+          auth: req.isAuthenticated(),
+          page: 1,
+          errmsg:req.flash('err'),
+          pic: profile_pic,
+          info: infoObj, //user public information
+          first_time: 0
+        });
+      }
     }
   });
 
@@ -1396,39 +1445,42 @@ app.post('/consent', function(req, res) {
 
 app.post('/survey', function(req, res) {
   process.nextTick(function() {
+    /*
     var result = {
       interest:  req.body.interest? parseInt(req.body.interest): null,
       education: req.body.education? parseInt(req.body.education): null,
       zip:       req.body.zip? parseInt(req.body.zip): null,
       getresult: req.body.getresult? 1:0,
       futurehelp:req.body.futurehelp? 1:0
-    }
-    
+    }*/
+    surveyCsvWriter
+      .writeRecords([{
+        id: req.user.id,
+        environment: req.body.environment,
+        enjoy: req.body.enjoy, 
+        career: req.body.career,
+        easy: req.body.easy,
+        contribution: req.body.contribution
+      }])
+      .then(()=> console.log('boom, survey written'));
+
     /*
     connection.query({
-      sql: "INSERT INTO survey (`id`, `interest`, `education`, `zip`, `email_results`, `email_future`) VALUES (?, ?, ?, ?, ?, ?)",
+      sql: "INSERT INTO survey (`id`, `environment`, `enjoy`, `career`, `easy`, `contribution`) VALUES (?, ?, ?, ?, ?, ?)",
       values: [
         req.user.id,
-        result.interest,
-        result.education,
-        result.zip,
-        result.getresult,
-        result.futurehelp
+        req.body.environment,
+        req.body.enjoy,
+        req.body.career,
+        req.body.easy,
+        req.body.contribution
       ]
     }, function(err, rows) {
       if (err) throw err;
-    });
+    });*/
 
-    connection.query({
-      sql: "UPDATE experiment SET survey=1 WHERE id=?",
-      values: [req.user.id]
-    }, function(err, res) {
-      if (err) throw err;
-    });
-    //console.log(result);
-    */
   });
-  res.redirect('/past_studies');
+  res.redirect('/tag');
 });
 
 app.post('/platform', function(req, res) {
@@ -1567,6 +1619,7 @@ var trueAnswers = ["no_threat","no_threat","no_threat",
   "threat","no_threat","threat","no_threat","threat",
   "threat","no_threat","no_threat"];
 
+/*
 io.use(passportSocketIO.authorize({
   key: 'connect.sid',
   secret: 'c813be3ca54af9bb3328e6e7212024a4fa627d15bd138de2ef78a32b7163db4f',
@@ -1598,6 +1651,7 @@ function onAuthorizeFail(data, message, error, accept){
 
   // see: http://socket.io/docs/client-api/#socket > error-object
 } 
+*/
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -1605,8 +1659,8 @@ io.on('connection', function(socket){
   
   socket.on('join', function(data){
     console.log(data);
-    socket.emit('messages', 'communication established for' + socket.request.user.email);
-    console.log(socket.request.user);
+    socket.emit('messages', 'communication established.');
+    console.log('established one connection.');
   })
 
   socket.on('disconnect', function(){
@@ -1640,7 +1694,7 @@ io.on('connection', function(socket){
 
   // for /community leaderboard.ejs search function
   socket.on('search', function(data){
-    console.log(socket.request.user.name + ' searching for ' + data );
+    console.log('leaderboard' + ' searching for ' + data );
     let lookForUser = new Promise (function(resolve,reject){
       connection.query({
         sql:'SELECT * FROM userInfo WHERE name = ?',
@@ -1663,6 +1717,106 @@ io.on('connection', function(socket){
     });
   });
 
+  // for /tag trajectory data collection when user SUBMITS
+  socket.on('createTagSubmittedTrajectory', function(data){
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" ) {
+      console.log("something is wrong with trajectory tracking id or picname")
+      return;
+    }
+    //data is an object with 2 attributes in the format of 
+    /*
+    {
+      info: {id: , pic: },
+      data: [{
+        time:
+        pitch:
+        yaw:
+        hfov:
+      }, {
+        time:
+        pitch:
+        ...
+        ...
+      }, ...]
+    }
+    */
+    console.log("TAG SUBMITTED, RECORDING DOWN DATA RN.");
+    let filename = "submittedTrajectory_user"+data.info.id + "_" + data.info.pic+".csv";
+    let filepath = "./public/datasets/user"+data.info.id;
+    if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
+      console.log(data.data);
+      console.log("\n"+ typeof(data.data));
+
+      const surveyCsvWriter = createCsvWriter({
+        path: "public/datasets/user"+data.info.id+"/"+filename,
+        header: [
+          {id:'time',title:'time'},
+          {id:'pitch',title:'pitch'},
+          {id:'yaw',title:'yaw'},
+          {id:'hfov',title:'hfov'},
+        ],
+      });
+
+      surveyCsvWriter.writeRecords(data.data).then(() => {
+        console.log('Data has been collected for a user submitted trajectory');
+      }, (err) => {
+        console.log('ERROR WHEN COLLECTING DATA BY A USER SUBMITTED TRAJECTORY');
+        console.log(err);
+      });
+
+    }
+  });
+
+  // for /tag trajectory data collection when user DOES NOT SUBMIT
+  socket.on('createTagUnsubmittedTrajectory', function(data){
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" ) {
+      console.log("something is wrong with trajectory tracking id or picname")
+      return;
+    }
+    console.log("TAG NOT SUBMITTED, RECORDING DOWN DATA RN.");
+    let filename = "unsubmittedTrajectory_user"+data.info.id + "_" + data.info.pic;
+    let repeat = 0;
+    let filepath = "./public/datasets/user"+data.info.id;
+
+    const maxRepeat = 10; //number of files we'd store for unsubmitted attempts, set to -1 for no limit
+
+    if (fs.existsSync(filepath)) { //if folder exists
+      console.log("folder exists!");
+      let createFile = function FileRecursion() {
+        console.log("recursion running");
+        if (!fs.existsSync(filepath+"/"+filename+"_attempt"+repeat+".csv") ) { //if the file does not exist
+          console.log(data.data);
+          console.log("\n"+ typeof(data.data));
+
+          const surveyCsvWriter = createCsvWriter({
+            path: "public/datasets/user"+data.info.id+"/"+filename+"_attempt"+repeat+".csv",
+            header: [
+              {id:'time',title:'time'},
+              {id:'pitch',title:'pitch'},
+              {id:'yaw',title:'yaw'},
+              {id:'hfov',title:'hfov'},
+            ],
+          });
+
+          surveyCsvWriter.writeRecords(data.data).then(() => {
+            console.log('Data has been collected for a user not submitted trajectory');
+          }, (err) => {
+            console.log('ERROR WHEN COLLECTING DATA BY A USER NOT SUBMITTED TRAJECTORY');
+            console.log(err);
+          });
+        } else { //if the file does exists AKA not the first time user does not submit his results.
+          if (maxRepeat == -1 || repeat < maxRepeat) {
+            repeat += 1;
+            FileRecursion();
+          } else {
+            console.log("bruh");
+            return;
+          }
+        }
+      }
+      createFile();
+    }
+  });
 });
 
 http.listen(8080, function(){

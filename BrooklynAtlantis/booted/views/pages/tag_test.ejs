@@ -29,7 +29,7 @@
         padding: 8px 5px;
         text-align: center;
         background: #6d6d6d;
-        display: inline-block;
+        display: block;
         cursor: pointer;
         font-size: 20px;
     }
@@ -97,6 +97,102 @@
     .content {
       max-width: 513px;
     }
+    legend {
+      font-size: 16px;
+      padding-bottom: 5px;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      margin: 10px 0;
+      width: 100%;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 12.8px;
+      cursor: pointer;
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+      background: #957d97d7;
+      border-radius: 25px;
+      border: 0px solid #000101;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+      border: 0px solid #000000;
+      height: 20px;
+      width: 39px;
+      border-radius: 7px;
+      background: #65001c;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -3.6px;
+    }
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #ac51b5;
+    }
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 12.8px;
+      cursor: pointer;
+      animate: 0.2s;
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+      border-radius: 25px;
+      background: #957d97d7;
+      border: 0px solid #000101;
+    }
+    input[type=range]::-moz-range-thumb {
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+      border: 0px solid #000000;
+      height: 20px;
+      width: 39px;
+      border-radius: 7px;
+      background: #65001c;
+      cursor: pointer;
+    }
+    input[type=range]::-ms-track {
+      width: 100%;
+      height: 12.8px;
+      cursor: pointer;
+      animate: 0.2s;
+      background: transparent;
+      border-color: transparent;
+      border-width: 39px 0;
+      color: transparent;
+    }
+    input[type=range]::-ms-fill-lower {
+      background: #7a997ed7;
+      border: 0px solid #000101;
+      border-radius: 50px;
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+    }
+    input[type=range]::-ms-fill-upper {
+      background: #957d97d7;
+      border: 0px solid #000101;
+      border-radius: 50px;
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+    }
+    input[type=range]::-ms-thumb {
+      box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+      border: 0px solid #000000;
+      height: 20px;
+      width: 39px;
+      border-radius: 7px;
+      background: #65001c;
+      cursor: pointer;
+    }
+    input[type=range]:focus::-ms-fill-lower {
+      background: #ac51b5;
+    }
+    input[type=range]:focus::-ms-fill-upper {
+      background: #ac51b5;
+    }
+    .slider_div{
+      background: linear-gradient(#000, #000) no-repeat center/2px 100%;
+      padding-top:1px;
+      padding-bottom:1px;
+    }
     @media (max-width: 500px) {
       #YTplayer {
         max-width: 352px;
@@ -152,10 +248,10 @@
 
         <ul class="list-unstyled components">
           <li>
-            <div class="ctrl" id="hs-toggle" title="Toggle Hot Spot Visibility">&#128065; Toggle tag visbillity on viewer</div> 
+            <div class="ctrl" id="hs-toggle" title="Toggle Hot Spot Visibility">&#128065; Hide all tags </div> 
           </li>
           <li>  
-            <div class="ctrl" id="delete-all-hs" title="Delete All Hot Spots">&#10060; Delete all user created tags </div>
+            <div class="ctrl" id="delete-all-hs" title="Delete All Hot Spots">&#10060; Delete all tags </div>
           </li>
           <li>
             <h4 id="currentTagAmount"> Current amount of tags created: 0</h4>
@@ -164,7 +260,7 @@
 
         <ul class="list-unstyled CTAs">
           <li>
-            <div class="sctrl" id="tagSubmit" title="Submit and Go To Next Picture"> &#10004; Submit the picture and go next</div>
+            <div class="sctrl" id="tagSubmit" title="Submit and Go To Next Picture"> &#10004; Submit the picture and go to the next</div>
           </li>
 
           <li>
@@ -189,6 +285,7 @@
 
     <div id="pic" data-pic =<%= pic %> ></div>
     <script>
+    var submitted = false;
     v = pannellum.viewer('panorama', {
         "type": "equirectangular",
         "panorama": "360images/"+ (document.getElementById('pic').dataset.pic+".jpg"),
@@ -245,6 +342,7 @@
     
     function submitAll() {
       responseArray = v.submit()
+      submitted = true;
       //responseArray is in the format of [[name1,x1,y1],[name2,x2,y2]...]
       var currentdate = new Date(); 
       var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
@@ -272,6 +370,7 @@
       $('#helpModal').modal();
     })
 
+    
 
 
 
@@ -292,6 +391,89 @@
         v.addHotSpot({"pitch":currentPitch, "yaw":currentYaw, "type":"info", "text":inputText});
         console.log('Hotspots are added at pitch: ' + currentPitch + '; yaw: ' + currentYaw);
     } */
+    </script>
+    <!-- Socket Stuff-->
+    <script src="/socket.io/socket.io.js"></script> 
+    <script>
+      var socket = io.connect('http://127.0.0.1:8080')
+      socket.on('connect',function(data){
+        socket.emit('join','Hello world from client.');
+      });
+
+      socket.on('messages', function(data){
+        console.log(data);
+      })
+
+      var startTime;
+      var idleTime = 0;
+      var idlePos = [0,0];
+      var fileInfo = new Object();
+      fileInfo.id = <%= id %>;
+      fileInfo.pic = "<%= pic %>";
+
+      const maxAFKtime = 1000 * 60 * 0.5; //the maximum amount of time the player can afk before the data stops collecting
+      const interval = 20; //how often we check the status of the window in ms
+
+      var dataList = [];
+      $(".pnlm-load-button").one("click",function(){
+        startTime = new Date();
+        var sendData = setInterval(function record(){
+          let dt = new Date();
+          timeSinceStart = dt.getTime() - startTime.getTime();
+
+          let rawData = {
+            time: timeSinceStart,
+            pitch: v.getPitch(),
+            yaw: v.getYaw(),
+            hfov: v.getHfov()
+          }
+
+          if (rawData.yaw == idlePos[0] && rawData.pitch == idlePos[1]) {
+            idleTime += interval;
+            console.log("afk time: " + idleTime);
+          } else{
+            console.log(rawData.yaw + ", "+ rawData.pitch + " not the same as " + idlePos);
+            idleTime = 0;
+            idlePos = [rawData.yaw,rawData.pitch];
+          }
+
+          if (idleTime < maxAFKtime) {
+            dataList.push(rawData);
+            console.log(rawData)
+            console.log("user id: " + fileInfo.id + ", pic name: " + fileInfo.pic);
+            console.log("---------------------");
+          } else {
+            console.log("user is afk right now zzzzzz, no data is pushed");
+            console.log("---------------------");
+          }
+
+        
+
+        },interval);
+
+
+      });
+
+      window.onbeforeunload = function() {
+        if (dataList.length > 0) {
+          let dataObject = {
+            info: fileInfo,
+            data: dataList
+          }
+          if (submitted == true) {
+            socket.emit("createTagSubmittedTrajectory",dataObject);
+          } else {
+            socket.emit("createTagUnsubmittedTrajectory",dataObject);
+            return ("are you sure?")
+          }
+        } 
+      }
+
+      //speical data handling
+      var specialData = [];
+
+      
+
     </script>
   </main>
   <footer>

@@ -32,6 +32,7 @@
       font-size: 18px;
     }
     #tutorial_next_button{
+      pointer-events:all;
       display: inline-block;
       padding: 8px 5px;
       text-align: center;
@@ -41,9 +42,7 @@
       cursor: pointer;
       color: gray;
     }
-    #tutorial_next_button:hover{
-      color:gray;
-    }
+    
     #tutorial_next_button.blink_it{
       animation: next_blink 1s;
       animation-iteration-count: infinite;
@@ -204,8 +203,9 @@
     <p id='tutorial_text'> Welcome! This short interactive tutorial will guide you on how to contribute to our project. </p>
     <br>
     <p id='tutorial_text_2'>When you are ready, press next.</p>
-    
-    <button id="tutorial_next_button" title="Blah Blah" disabled = true> Next</button>
+    <span class="d-inline-block" data-toggle="popover" data-trigger="hover" data-container="body" data-content="Huge Bruh Moment Why are you here">
+      <button class = 'blink_it' type = "button" id="tutorial_next_button"> Next</button>
+    </span>
   </div>
 </section>
 <body>

@@ -10,7 +10,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick = "v.deleteAllHS()">Yes</button>
+          <button type="button" class="btn btn-primary" onclick = "v.deleteAllHS()">Delete</button>
           <!-- v.deleteAllHS() is a function inside dev_pannellum-->
         </div>
       </div>
@@ -29,7 +29,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick = "submitAll()">Yes</button>
+        <button type="button" class="btn btn-primary" onclick = "submitAll()">Submit</button>
       </div>
     </div>
   </div>
@@ -40,14 +40,14 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="deleteTagLabel">Delete Single Tag</h5>
+          <h5 class="modal-title" id="deleteTagLabel">Delete Tag</h5>
         </div>
         <div class="modal-body">
           <h5 id="deleteOneTagText"> Do you want to delete the tag </h5>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id = "deleteOneTagButton">Yes</button>
+          <button type="button" class="btn btn-primary" id = "deleteOneTagButton">Delete</button>
         </div>
       </div>
     </div>
@@ -66,12 +66,12 @@
           <h5 class="modal-title" id="createOneTagLabel">Name the Tag</h5>
         </div>
         <div class="modal-body">
-          <h5> How would you describe the object you just tagged? (max <script>document.write(max_chars)</script> characters)</h5> <br>
+          <h5> Please provide a label to the object. <i>(max <script>document.write(max_chars)</script> characters)</i></h5> <br>
           <input type="text" class = "form-control field">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal" disabled='true' style='cursor:not-allowed;'>Cancel</button>
-          <button type="button" class="btn btn-primary" id = "createOneTagButton">Yes</button>
+          <button type="button" class="btn btn-primary" id = "createOneTagButton">Create</button>
         </div>
       </div>
     </div>

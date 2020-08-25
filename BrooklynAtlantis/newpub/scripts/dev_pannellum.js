@@ -2143,6 +2143,15 @@ function aboutMessage(event) {
             if ($('#createOneTag').modal('hide'))
             {
                     //console.log('promise called.');
+                let specialDt = new Date();
+                timeSinceStart = specialDt.getTime() - startTime.getTime();
+        
+                let rawData = {
+                    time: timeSinceStart,
+                    pitch: v.getPitch(),
+                    yaw: v.getYaw(),
+                    hfov: v.getHfov()
+                }
                 resolve(name);
             }
             
@@ -2150,6 +2159,7 @@ function aboutMessage(event) {
 
         addTagPromise.then(function(name) { //only add the tag to the viewer after the user input is gotten and the modal window is closed.
             _this.addHotSpot({"pitch":pitch, "yaw":yaw, "type":"info", "text":name, "x":x, "y":y});
+
             $('#currentTagAmount').html("Current amount of tags created: " + config.hotSpots.length);
             event.preventDefault();
         });
@@ -3297,7 +3307,7 @@ function createHotSpot(hs) {
         //in else, a becomes a button, where it listens for the event 'double click' 
         a = document.createElement('a');
         a.addEventListener('dblclick', function(e) {
-            $("#deleteOneTagText").text("Do you wish to delete the tag: " + hs.text +" ?");
+            $("#deleteOneTagText").text("Do you wish to delete the tag: '" + hs.text +"' ?");
             $("#deleteOneTag").modal({backdrop: 'static'}); 
             $("#deleteOneTagButton").click(function(e) {
                 var index = config.hotSpots.findIndex(x => (x.yaw ===hs.yaw) && (x.pitch === hs.pitch) );
@@ -4067,6 +4077,11 @@ function sanitizeURLForCss(url) {
 this.toggleHS = function() {
     config.showHotSpot = (!config.showHotSpot); 
     renderHotSpots();
+    if (config.showHotSpot) {
+        $('#hs-toggle').html('&#128065; Hide all tags ');
+    } else {
+        $('#hs-toggle').html('&#128065; Show all tags ');
+    }
     return this;
 }
 

@@ -51,8 +51,8 @@
         <% if (errmsg) {%>
           <p> <%= errmsg %> </p>
         <% } %>
-        <% if (first_time == 1) { %>
-          <p>  Please tell us a bit more about yourself. All of the info here will be displayed to other users when they check out your profile! If you prefer to do this later, press cancel. </p>
+        <% if (first_time == 1 || (1 == 1)) { %>
+          <p>  Please tell us a bit more about yourself. <br>The info submitted here will be displayed to other users when they visit your profile page.</p>
         <% } %>
         <div style="border-left: 1px solid #eee; width: 1px; position: absolute; left: 45px; height: 100%;"></div>
       </div>
@@ -77,7 +77,7 @@
                       <textarea id="newEducation" name="Occupation" rows="1" cols="50"maxlength="50"></textarea>
                   </li>
                   <li>
-                      <p>Lives In: </p>
+                      <p>Current location: </p>
                       <textarea id="newLives_in" name="Occupation" rows="1" cols="50"maxlength="50"></textarea>
                   </li>
                   <li>
@@ -122,6 +122,7 @@
           // It can be made less wordy if you use one.
           var form = document.createElement("form");
           form.setAttribute("method", method);
+          form.setAttribute("action", "/edit");
 
           for(var key in params) {
             if(params.hasOwnProperty(key)) {

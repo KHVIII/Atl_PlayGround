@@ -57,10 +57,35 @@
       <br>
       <form action='/signup' method='POST' style="max-width:384px; margin: 0 auto;">
         <div class="form-group">
-          <label for="name">Name</label>
+          <label for="name">Username</label>
           <input type="name" class="form-control" name="name" id="name" placeholder="Enter name" required>
           <p id='nameTaken' style="text-align: center; color:red; visibility: hidden;"> This name is taken, please choose another one.</p>
         </div>
+        <!--
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="age" class="form-control" name="age" id="age" placeholder="Enter Age" required>
+        </div>
+
+        <div class="form-group">
+          <div class='input-group date' id='datetimepicker1'>
+              <input type='text' class="form-control" />
+              <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+              </span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="Preferred Pronoun">Preferred Pronoun</label>
+              <select class="form-control" id="pronounSelect">
+                <option>She/Her</option>
+                <option>He/Him</option>
+                <option>They/Them</option>
+              </select>
+        </div>
+      -->
+        
         <div class="form-group">
           <label for="email">Email Address</label>
           <input type="email" class="form-control" name="email" id="email" placeholder="Enter email" required>
@@ -73,6 +98,7 @@
           <label for="confirm">Confirm Password</label>
           <input type="password" class="form-control" name="confirm" id="confirm" placeholder="Confirm password" required>
         </div>
+        
         <div class="form-check">
           <label class="form-check-label" id="ageCheck">
             <input type="checkbox" class="form-check-input" name="age" required>
@@ -129,7 +155,12 @@
       $('#name').blur(function(){
         console.log('checking');
         socket.emit('checkRepeatName',$('#name').val());
-      })
+      });
+ 
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script> 
+      $('#datetimepicker1').datetpicker();
     </script>
   </last>
 </body>

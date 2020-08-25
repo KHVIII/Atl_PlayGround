@@ -7,7 +7,7 @@ var bcrypt = require ("bcrypt");
 
 
 const connection = mysql.createConnection({
-  host: 'localhost',
+  host: '127.0.0.1',
   user: 'root',
   password: 'atlantis2020',
   database: 'testDB'
@@ -53,6 +53,7 @@ app.post('/register', async function(request, response) {
 	connection.query('INSERT INTO accounts SET ?', accounts, function (error, results, fields) {
 		if (error) {
 			response.send('Something went wrong');
+			console.log (error);
 			response.end();
 		} else {
 			response.redirect('/login');
