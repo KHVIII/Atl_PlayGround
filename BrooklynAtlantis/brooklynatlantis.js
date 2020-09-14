@@ -573,10 +573,20 @@ app.get('/callback', function(req, res) {
 
 app.get('/index', function(req, res) { //this will be the 'About' page
   req.session.lastPage = '/index';
-  res.render('pages/index', {
-    auth: req.isAuthenticated(),
-    page: 3
-  });
+  if (req.isAuthenticated()) {
+    dataLogger(req.user.id,"move","about");
+    res.render('pages/index', {
+      id: req.user.id,
+      auth: req.isAuthenticated(),
+      page: 3
+    });
+  } else {
+    res.render('pages/index', {
+      id: -1,
+      auth: req.isAuthenticated(),
+      page: 3
+    });
+  }
 });
 
 
@@ -611,19 +621,39 @@ app.get('/consent_form', mustBeLoggedIn, function(req, res) {
 
 app.get('/past_studies', function(req, res) { //This will be the 'Past Studies' Page
   req.session.lastPage = '/past_studies';
-  res.render('pages/past_studies', {
-    auth: req.isAuthenticated(),
-    page: 2
-  });
+  if (req.isAuthenticated()) {
+    dataLogger(req.user.id,"move","past_studies");
+    res.render('pages/past_studies', {
+      id: req.user.id,
+      auth: req.isAuthenticated(),
+      page: 2
+    });
+  } else {
+    res.render('pages/past_studies', {
+      id: -1,
+      auth: req.isAuthenticated(),
+      page: 2
+    });
+  }
 });
 
 
 app.get('/contact', function(req, res) { //This will be the 'Contacts' Page
   req.session.lastPage = '/contact';
-  res.render('pages/contact', {
-    auth: req.isAuthenticated(),
-    page: 4
-  });
+  if (req.isAuthenticated()) {
+    dataLogger(req.user.id,"move","contact");
+    res.render('pages/contact', {
+      id: req.user.id,
+      auth: req.isAuthenticated(),
+      page: 4
+    });
+  } else {
+    res.render('pages/contact', {
+      id: -1,
+      auth: req.isAuthenticated(),
+      page: 4
+    });
+  }
 });
 
 //------------------------------------------------------------------------------------Tagging
@@ -645,7 +675,7 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
     else
     {
       if ( rows[0].tutorial_completion == 0) {
-        dataLogger(req.user.id,"move","tag");
+        dataLogger(req.user.id,"move","tag_tutorial");
         res.render('pages/tag_tutorial',{
           id: req.user.id,
           auth: req.isAuthenticated(),
@@ -655,9 +685,9 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
         });
       } else {
         let curr_pic_name = "img" + (rows[0].pics_done+1);
-        dataLogger(req.user.id,"move","tag_tutorial");
+        dataLogger(req.user.id,"move","tag",curr_pic_name);
         res.render('pages/tag_test', {
-          od: req.user.id,
+          id: req.user.id,
           auth: req.isAuthenticated(),
           page: 0,
           pic: curr_pic_name,
@@ -1003,6 +1033,7 @@ app.get('/edit', mustBeLoggedIn, function(req,res) {
       if (!req.session.lastPage == '/signup') {
         console.log(req.session.lastPage);
         res.render('pages/edit', {
+          id: req.user.id,
           page: -1,
           auth: 1,
           errmsg: req.flash('err'),
@@ -1011,6 +1042,7 @@ app.get('/edit', mustBeLoggedIn, function(req,res) {
         });
       } else {
         res.render('pages/edit', {
+          id: req.user.id,
           page: -1,
           auth: 1,
           errmsg: req.flash('err'),
@@ -1047,6 +1079,7 @@ app.post('/edit', function(req,res) {
 app.get('/change_password', mustBeLoggedIn, function(req,res) {
   dataLogger(req.user.id,"move","change_password");
   res.render('pages/reset', {
+    id: req.user.id,
     email: req.user.email, 
     errmsg: req.flash('err')
   })

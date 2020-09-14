@@ -59,6 +59,7 @@
             });
 
             profileSetUp.then(function(){
+                socket.emit('dataLogger',[<%- id %>, "user_leaderboard_access", currUser.name, "tags done: " + currUser.tags_done + ", pics done: " + currUser.pics_done]);
                 userModal.modal()
             });
             

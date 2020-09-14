@@ -99,6 +99,24 @@
         document.body.removeChild(dummy);
     }
   </script>
+
+      <% if (id != -1) { %>
+      <script src="/socket.io/socket.io.js"></script> 
+      <script>
+          var socket = io.connect('http://127.0.0.1:8080');
+          socket.on('connect',function(data){
+              socket.emit('join','Hello world from about. ');
+          });
+  
+          socket.on('messages', function(data){
+              console.log(data);
+          });
+  
+          window.onbeforeunload = function() {
+              socket.emit('dataLogger', [<%- id %>, "exit", "contact", ""]);
+          }
+      </script>
+    <% } %>
   </last>
 </body>
 </html>

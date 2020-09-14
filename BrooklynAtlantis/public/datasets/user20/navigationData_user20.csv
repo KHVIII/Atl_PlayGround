@@ -1,0 +1,48 @@
+Time (UTC),Action,Detail,Notes
+14_9_2020 @ 4:42:46,Sign-Up,,
+14_9_2020 @ 4:42:46,move,edit,
+14_9_2020 @ 4:43:12,exit,edit,
+14_9_2020 @ 4:43:12,move,profile,
+14_9_2020 @ 4:43:35,exit,profile,
+14_9_2020 @ 4:43:35,move,tag_tutorial,
+14_9_2020 @ 4:43:36,exit,tag_tutorial,
+14_9_2020 @ 4:43:36,move,profile,
+14_9_2020 @ 4:43:39,exit,profile,
+14_9_2020 @ 4:43:39,move,edit,
+14_9_2020 @ 4:46:52,exit,edit,
+14_9_2020 @ 4:46:52,move,edit,
+14_9_2020 @ 4:47:1,edit_info,bio,I am what I am asdhasudhasdasd
+14_9_2020 @ 4:47:5,edit_info,occupation,
+14_9_2020 @ 4:47:9,edit_info,occupation,
+14_9_2020 @ 4:47:14,submit_edits,,
+14_9_2020 @ 4:47:14,move,profile,
+14_9_2020 @ 4:47:21,exit,profile,
+14_9_2020 @ 4:47:21,move,leaderboard,1
+14_9_2020 @ 4:47:22,exit,leaderboard,1
+14_9_2020 @ 4:47:22,check_own_rank,,
+14_9_2020 @ 4:47:23,move,leaderboard,1
+14_9_2020 @ 4:47:28,exit,leaderboard,1
+14_9_2020 @ 4:47:29,check_own_rank,,
+14_9_2020 @ 4:47:29,move,leaderboard,1
+14_9_2020 @ 4:47:40,user_search_access,ooofies,invalid_name
+14_9_2020 @ 4:47:47,user_search_access,test10,"tags done: 0, pics done: 0"
+14_9_2020 @ 4:48:11,user_leaderboard_access,test12,"tags done: 0, pics done: 0"
+14_9_2020 @ 4:59:35,exit,leaderboard,1
+14_9_2020 @ 4:59:45,move,profile,
+14_9_2020 @ 4:59:48,exit,profile,
+14_9_2020 @ 4:59:48,move,past_studies,
+14_9_2020 @ 4:59:51,exit,past_studies,
+14_9_2020 @ 4:59:51,move,about,
+14_9_2020 @ 4:59:52,move,contacts,
+14_9_2020 @ 4:59:53,move,profile,
+14_9_2020 @ 5:0:42,exit,profile,
+14_9_2020 @ 5:0:42,move,past_studies,
+14_9_2020 @ 5:1:44,exit,past_studies,
+14_9_2020 @ 5:1:44,move,past_studies,
+14_9_2020 @ 5:2:6,exit,past_studies,
+14_9_2020 @ 5:2:6,move,contacts,
+14_9_2020 @ 5:2:20,exit,about,
+14_9_2020 @ 5:2:20,move,about,
+14_9_2020 @ 5:3:13,exit,about,
+14_9_2020 @ 5:3:14,move,past_studies,
+14_9_2020 @ 5:3:24,exit,past_studies,

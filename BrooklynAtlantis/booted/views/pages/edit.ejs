@@ -106,13 +106,6 @@
 
       <script>
         var infoArray = <%- info %>; //array of info 
-        document.getElementById('newBio').placeholder = infoArray.bio;
-        document.getElementById('newOccupation').placeholder = infoArray.occupation;
-        document.getElementById('newEducation').placeholder = infoArray.education;
-        document.getElementById('newLives_in').placeholder = infoArray.lives_in;
-        document.getElementById('newIs_from').placeholder = infoArray.is_from;
-        document.getElementById('newPhone').placeholder = infoArray.phone;
-        document.getElementById("newPublic_email").placeholder=infoArray.public_email;
 
         function post(params, method) {
           console.log('it works kinda');
@@ -160,13 +153,28 @@
       <button class = 'buttons' id = 'submitButton'> Submit </button>
       <button class = 'buttons' style='background-color:grey !important;' onclick='window.location.assign("/profile")' > Cancel </button>
 
+      <script src="/socket.io/socket.io.js"></script> 
+      <script>
+          var socket = io.connect('http://127.0.0.1:8080');
+          socket.on('connect',function(data){
+              socket.emit('join','Hello world from edit profile.');
+          });
+
+          socket.on('messages', function(data){
+              console.log(data);
+          });
+
+          window.onbeforeunload = function() {
+              socket.emit('dataLogger', [<%- id %>, "exit", "edit", ""]);
+          }
+      </script>
 
       <script>
         document.getElementById('submitButton').addEventListener('click', function(e){
+          socket.emit('dataLogger', [<%- id %>, "submit_edits", "", ""]);
           submitAllInfo();
         })
       </script>
-      
     </div>
   </main>
   <footer>
@@ -174,6 +182,36 @@
   </footer>
   <last>
     <% include ../partials/scripts %>
+    <script>
+        document.getElementById('newBio').placeholder = infoArray.bio;
+        $('#newBio').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "bio", $('#newBio').val()]);
+        });
+        document.getElementById('newOccupation').placeholder = infoArray.occupation;
+        $('#newOccupation').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "occupation", $('#newOccupation').val()]);
+        });
+        document.getElementById('newEducation').placeholder = infoArray.education;
+        $('#newEducation').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "education", $('#newEducation').val()]);
+        });
+        document.getElementById('newLives_in').placeholder = infoArray.lives_in;
+        $('#newLives_in').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "location", $('#newLives_in').val()]);
+        });
+        document.getElementById('newIs_from').placeholder = infoArray.is_from;
+        $('#newIs_from').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "hometown", $('#newIs_from').val()]);
+        });
+        document.getElementById('newPhone').placeholder = infoArray.phone;
+        $('#newPhone').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "phone", $('#newPhone').val()]);
+        });
+        document.getElementById("newPublic_email").placeholder=infoArray.public_email;
+        $('#newPublic_email').blur(function(){
+          socket.emit('dataLogger', [<%- id %>, "edit_info", "public_email", $('#newPublic_email').val()]);
+        });
+    </script>
   </last>
 </body>
 </html>

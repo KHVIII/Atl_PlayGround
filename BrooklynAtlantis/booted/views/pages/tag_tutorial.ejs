@@ -348,7 +348,25 @@
         v.addHotSpot({"pitch":currentPitch, "yaw":currentYaw, "type":"info", "text":inputText});
         console.log('Hotspots are added at pitch: ' + currentPitch + '; yaw: ' + currentYaw);
     } */
+
     </script>
+
+    <script src="/socket.io/socket.io.js"></script> 
+    <script>
+        var socket = io.connect('http://127.0.0.1:8080');
+        socket.on('connect',function(data){
+            socket.emit('join','Hello world from tag tutorial');
+        });
+
+        socket.on('messages', function(data){
+            console.log(data);
+        });
+
+        window.onbeforeunload = function() {
+            socket.emit('dataLogger', [<%- id %>, "exit", "tag_tutorial", ""]);
+        }
+    </script>
+
   </main>
   <footer>
     <br>

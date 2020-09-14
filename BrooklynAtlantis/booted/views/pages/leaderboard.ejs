@@ -182,7 +182,6 @@
         console.log(data);
         let currUser = data;
         let userModal = $('#userProfileModal');
-        delete currUser.id;
         console.log(currUser);
         
         userModal.find('.modal-title').text(currUser.name+"'s Profile");
@@ -199,13 +198,15 @@
         });
 
         profileSetUp.then(function(){
-            userModal.modal()
+          socket.emit('dataLogger',[<%-  id %>, "user_search_access", currUser.name, "tags done: " + currUser.tags_done + ", pics done: " + currUser.pics_done]);
+          userModal.modal()
         });
       })
 
       socket.on('searchNotFound', function(data){
         console.log(data);
         $('#notFound').css("visibility","visible");
+        socket.emit('dataLogger', [<%- id %>, "user_search_access", $('#searchName').val(), "invalid_name"]);
       })
 
       function searchForUser() {
@@ -218,6 +219,12 @@
         searchForUser();
       });
 
+    </script>
+    
+    <script>
+        window.onbeforeunload = function() {
+            socket.emit('dataLogger', [<%- id %>, "exit", "leaderboard", <%- curr_page %>]);
+        }
     </script>
 
 

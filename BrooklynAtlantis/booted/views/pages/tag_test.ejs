@@ -493,6 +493,8 @@
           socket.emit("createTagUnsubmittedTrajectory",dataObject);
           socket.emit("createTagUnsubmittedEvent",specialDataObject);
         }
+        socket.emit('dataLogger', [<%- id %>, "exit", "tag", "<%- pic %>"]);
+
       }
 
       //speical data handling
