@@ -249,6 +249,7 @@
   </footer>
   <last>
     <% include ../partials/scripts %>
+
     <script>
         var infoObj = <%- info %>; //array of info 
         console.log(infoObj);
@@ -271,6 +272,23 @@
         document.getElementById('is_from').innerHTML = infoObj.is_from;
         document.getElementById('phone').innerHTML = infoObj.phone;
         document.getElementById("public_email").innerHTML=infoObj.public_email; */
+
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script> 
+    <script>
+        var socket = io.connect('http://127.0.0.1:8080');
+        socket.on('connect',function(data){
+            socket.emit('join','Hello world from client / Profile. ');
+        });
+
+        socket.on('messages', function(data){
+            console.log(data);
+        });
+
+        window.onbeforeunload = function() {
+            socket.emit('dataLogger', [<%- id %>, "exit", "profile", ""]);
+        }
     </script>
      <% if (first_time == 2) {%>
         <script>

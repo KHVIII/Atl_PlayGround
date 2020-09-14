@@ -2144,14 +2144,21 @@ function aboutMessage(event) {
             {
                     //console.log('promise called.');
                 let specialDt = new Date();
-                timeSinceStart = specialDt.getTime() - startTime.getTime();
+                let specialTimeSinceStart = specialDt.getTime() - startTime.getTime(); //start time is defined in tag_test.ejs
         
-                let rawData = {
-                    time: timeSinceStart,
-                    pitch: v.getPitch(),
-                    yaw: v.getYaw(),
-                    hfov: v.getHfov()
+                let specialRawData = {
+                    time: specialTimeSinceStart,
+                    action: "Tag Creation",
+                    description: name,
+                    action_pitch: pitch,
+                    action_yaw: yaw,
+                    viewer_center_pitch: _this.getPitch(),
+                    viewer_center_yaw: _this.getYaw(),
+                    viewer_hfov: _this.getHfov()
                 }
+
+                console.log(specialRawData);
+                specialDataList.push(specialRawData);
                 resolve(name);
             }
             
@@ -3309,7 +3316,25 @@ function createHotSpot(hs) {
         a.addEventListener('dblclick', function(e) {
             $("#deleteOneTagText").text("Do you wish to delete the tag: '" + hs.text +"' ?");
             $("#deleteOneTag").modal({backdrop: 'static'}); 
-            $("#deleteOneTagButton").click(function(e) {
+            $("#deleteOneTagButton").unbind().click(function(e) {
+                
+                let specialDt = new Date();
+                let specialTimeSinceStart = specialDt.getTime() - startTime.getTime(); //start time is defined in tag_test.ejs
+        
+                let specialRawData = {
+                    time: specialTimeSinceStart,
+                    action: "Single Tag Deletion",
+                    description: hs.text,
+                    action_pitch: hs.pitch,
+                    action_yaw: hs.yaw,
+                    viewer_center_pitch: _this.getPitch(),
+                    viewer_center_yaw: _this.getYaw(),
+                    viewer_hfov: _this.getHfov()
+                }
+
+                console.log(specialRawData);
+                specialDataList.push(specialRawData);
+
                 var index = config.hotSpots.findIndex(x => (x.yaw ===hs.yaw) && (x.pitch === hs.pitch) );
                 config.hotSpots.splice(index,1);
 
@@ -4105,6 +4130,23 @@ this.getHSamount = function() {
  */
 this.deleteAllHS = function() {
     if (config.hotSpots.length === 0) {return this;}
+    let specialDt = new Date();
+    let specialTimeSinceStart = specialDt.getTime() - startTime.getTime(); //start time is defined in tag_test.ejs
+
+    let specialRawData = {
+        time: specialTimeSinceStart,
+        action: "All Tag Deletion",
+        description: "Tags deleted: " + config.hotSpots.length,
+        action_pitch: "-",
+        action_yaw: "-",
+        viewer_center_pitch: _this.getPitch(),
+        viewer_center_yaw: _this.getYaw(),
+        viewer_hfov: _this.getHfov()
+    }
+
+    console.log(specialRawData);
+    specialDataList.push(specialRawData);
+
     destroyHotSpots();
     config.hotSpots = [];
     $('#currentTagAmount').html("Current amount of tags created: " + config.hotSpots.length);
@@ -4121,7 +4163,26 @@ this.deleteAllHS = function() {
  * @returns [x1 + y1 + name1, x2 + y2 + name2]   x and y are zero-padded to 4 digits as strings. 
  */
 this.submit = function() {
-    if (config.hotSpots.length === 0) {return [];}
+    let specialDt = new Date();
+    let specialTimeSinceStart = specialDt.getTime() - startTime.getTime(); //start time is defined in tag_test.ejs
+
+    let specialRawData = {
+        time: specialTimeSinceStart,
+        action: "Tag Submission",
+        description: "Tags submitted: " + config.hotSpots.length,
+        action_pitch: "-",
+        action_yaw: "-",
+        viewer_center_pitch: _this.getPitch(),
+        viewer_center_yaw: _this.getYaw(),
+        viewer_hfov: _this.getHfov()
+    }
+
+    console.log(specialRawData);
+    specialDataList.push(specialRawData);
+
+    if (config.hotSpots.length === 0) {
+        return [];
+    }
 
     var returnArray = [];
     config.hotSpots.forEach(function(hs) {

@@ -160,6 +160,36 @@
   </footer>
   <last>
     <% include ../partials/scripts %>
+
+    <!-- Socket Stuff-->
+    <script src="/socket.io/socket.io.js"></script> 
+    <script>
+      var socket = io.connect('http://127.0.0.1:8080');
+      socket.on('connect',function(data){
+        socket.emit('join','Hello world from client / Profile. ');
+      });
+
+      socket.on('messages', function(data){
+        console.log(data);
+      });
+
+      window.onbeforeunload = function () {
+        var form = document.createElement("form");
+        form.setAttribute("method", "POST");
+        form.setAttribute("action","/exitDataLogger");
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "pageName");
+        hiddenField.setAttribute("value", "profile");
+        form.appendChild(hiddenField);
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+    </script>
   </last>
 </body>
 </html>

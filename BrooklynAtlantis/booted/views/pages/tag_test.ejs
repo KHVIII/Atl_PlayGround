@@ -308,7 +308,7 @@
             }
         ] */
     });
-    function post(params, method) {
+  function post(params, method) {
     method = method || "post"; // Set method to post by default if not specified.
 
     // The rest of this code assumes you are not using a library.
@@ -404,11 +404,12 @@
         console.log(data);
       })
 
+      var loaded = false;
       var startTime;
       var idleTime = 0;
       var idlePos = [0,0];
       var fileInfo = new Object();
-      fileInfo.id = <%= id %>;
+      fileInfo.id = <%= id %> ;
       fileInfo.pic = "<%= pic %>";
 
       const maxAFKtime = 1000 * 60 * 0.5; //the maximum amount of time the player can afk before the data stops collecting
@@ -416,7 +417,9 @@
 
       var dataList = [];
       $(".pnlm-load-button").one("click",function(){
+        loaded = true;
         startTime = new Date();
+        fileInfo.timeStamp = startTime.getUTCDate() + "_" + (startTime.getUTCMonth()+1)  + "_" + startTime.getUTCFullYear() + " @ "  + startTime.getUTCHours() + ":"  + startTime.getUTCMinutes() + ":" + startTime.getUTCSeconds();
         var sendData = setInterval(function record(){
           let dt = new Date();
           timeSinceStart = dt.getTime() - startTime.getTime();
@@ -439,7 +442,7 @@
 
           if (idleTime < maxAFKtime) {
             dataList.push(rawData);
-            console.log(rawData)
+            console.log(rawData);
             console.log("user id: " + fileInfo.id + ", pic name: " + fileInfo.pic);
             console.log("---------------------");
           } else {
@@ -460,17 +463,40 @@
             info: fileInfo,
             data: dataList
           }
+
+          let specialDataObject = {
+            info: fileInfo,
+            data: specialDataList
+          }
           if (submitted == true) {
             socket.emit("createTagSubmittedTrajectory",dataObject);
+            socket.emit("createTagSubmittedEvent",specialDataObject);
           } else {
-            socket.emit("createTagUnsubmittedTrajectory",dataObject);
-            return ("are you sure?")
+            if (v.getHSamount() > 0) {
+              return ("are you sure?")
+            }
           }
         } 
       }
+      window.onunload = function() {
+        if (submitted == false && loaded == true) {
+          let dataObject = {
+            info: fileInfo,
+            data: dataList
+          }
+
+          let specialDataObject = {
+            info: fileInfo,
+            data: specialDataList
+          }
+
+          socket.emit("createTagUnsubmittedTrajectory",dataObject);
+          socket.emit("createTagUnsubmittedEvent",specialDataObject);
+        }
+      }
 
       //speical data handling
-      var specialData = [];
+      var specialDataList = [];
 
       
 

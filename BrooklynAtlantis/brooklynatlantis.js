@@ -368,9 +368,33 @@ function(req, email, password, done) {
               console.log("error when fs creating a folder for sign up user: " + err);
               throw(err);
             } else {
+              const browsingDataWriter = createCsvWriter({
+                path:'public/datasets/user'+newUser.id+'/navigationData_user'+newUser.id+".csv",
+                header: [
+                  {id:'time',title:'Time (UTC)'},
+                  {id:'action',title:'Action'},
+                  {id:'detail',title:'Detail'},
+                  {id:'notes',title:'Notes'},
+                ],
+              });
+
+              detailedDateTime = currentdate.getUTCDate() + "_" + (currentdate.getUTCMonth()+1)  + "_" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
+              let data = [
+                {
+                  time: detailedDateTime,
+                  action: "Sign-Up",
+                  detail: "",
+                  notes: ""
+                }
+              ];
+              browsingDataWriter.writeRecords(data).then(()=>{
+                console.log("successfully created navigationData csv and recorded down sign up time.");
+              });
+
               console.log("poggers");
             }
           });
+
           return done(null, newUser);
         });
 
@@ -621,7 +645,9 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
     else
     {
       if ( rows[0].tutorial_completion == 0) {
+        dataLogger(req.user.id,"move","tag");
         res.render('pages/tag_tutorial',{
+          id: req.user.id,
           auth: req.isAuthenticated(),
           page: 0,
           pic: 'img1',
@@ -629,7 +655,9 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
         });
       } else {
         let curr_pic_name = "img" + (rows[0].pics_done+1);
+        dataLogger(req.user.id,"move","tag_tutorial");
         res.render('pages/tag_test', {
+          od: req.user.id,
           auth: req.isAuthenticated(),
           page: 0,
           pic: curr_pic_name,
@@ -772,6 +800,7 @@ app.post('/signup', alreadyLoggedIn, function(req, res, next) {
 
 
 app.get('/logout', function(req, res){
+  dataLogger(req.user.id,"logout");
   req.logout();
   res.redirect('/');
 });
@@ -970,6 +999,7 @@ app.get('/edit', mustBeLoggedIn, function(req,res) {
       delete rows[0]['id'];
       console.log(rows[0]);
       let infoObj = JSON.stringify(rows[0]);
+      dataLogger(req.user.id,"move","edit");
       if (!req.session.lastPage == '/signup') {
         console.log(req.session.lastPage);
         res.render('pages/edit', {
@@ -1015,6 +1045,7 @@ app.post('/edit', function(req,res) {
 
 //------------------------------------------------Change Password (this is when I am already logged in) ------------------------------------
 app.get('/change_password', mustBeLoggedIn, function(req,res) {
+  dataLogger(req.user.id,"move","change_password");
   res.render('pages/reset', {
     email: req.user.email, 
     errmsg: req.flash('err')
@@ -1064,8 +1095,10 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
       console.log(rows[0]);
       let infoObj = JSON.stringify(rows[0]);
 
+      dataLogger(req.user.id,"move","profile");
       if (rows[0].tutorial_completion == 0) {
         res.render('pages/profile_v2', {
+          id: req.user.id,
           auth: req.isAuthenticated(),
           page: 1,
           errmsg:req.flash('err'),
@@ -1075,6 +1108,7 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
         });
       } else if (rows[0].pics_done == 0) {
         res.render('pages/profile_v2', {
+          id: req.user.id,
           auth: req.isAuthenticated(),
           page: 1,
           errmsg:req.flash('err'),
@@ -1084,6 +1118,7 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
         });
       } else {
         res.render('pages/profile_v2', {
+          id: req.user.id,
           auth: req.isAuthenticated(),
           page: 1,
           errmsg:req.flash('err'),
@@ -1153,7 +1188,8 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
 app.post('/upload_propic', mustBeLoggedIn, function(req,res){
   //have a promise to generate a token and this token will be used for the filename. The reason for this is so if user uploads two pictures back to back, with the same name, no errors occur between deletion and replacement.
   //a better solution could be done in async fashion, but this works and it's good practice to not let user name our files.
-  
+  dataLogger(req.user.id,"upload_pro_pic");
+
   let generateToken = new Promise (function(resolve,reject){
     crypto.randomBytes(20, function(err, buf) {
       var token = buf.toString('hex');
@@ -1296,6 +1332,7 @@ app.get('/community-ownRank',mustBeLoggedIn, function(req,res){
   });
 
   getUserRank.then(function(){
+    dataLogger(req.user.id,"check_own_rank");
     res.redirect('/community.'+userPage);
   })
 })
@@ -1358,6 +1395,8 @@ app.get('/community.:pageNum', mustBeLoggedIn, [
             }
             var XJSON = JSON.stringify(rows);
             console.log(XJSON);
+
+            dataLogger(req.user.id,"move","leaderboard",currPageNumber);
             res.render('pages/leaderboard', {
               auth: req.isAuthenticated(),
               page: 5,
@@ -1412,7 +1451,7 @@ app.get('/auth/facebook/callback?',
 
 //-----------------------------UNUSED PAGES TO BE USED LATER
 
-
+/*
 app.get('/survey', mustBeLoggedIn, function(req, res) {
   res.render('pages/survey', {
     auth: req.isAuthenticated(),
@@ -1442,6 +1481,7 @@ app.post('/consent', function(req, res) {
   });
   res.redirect(req.session.lastPage);
 });
+*/
 
 app.post('/survey', function(req, res) {
   process.nextTick(function() {
@@ -1464,6 +1504,7 @@ app.post('/survey', function(req, res) {
       }])
       .then(()=> console.log('boom, survey written'));
 
+    dataLogger(req.user.id,"survey_completion");
     /*
     connection.query({
       sql: "INSERT INTO survey (`id`, `environment`, `enjoy`, `career`, `easy`, `contribution`) VALUES (?, ?, ?, ?, ?, ?)",
@@ -1564,6 +1605,44 @@ app.post('/platform', function(req, res) {
   res.redirect("/survey");
 });
 
+app.post('/exitDataLogger', function(req,res){
+  console.log("in the exit data logger pog");
+  if (typeof(req.body.pageName) == "string") {
+    dataLogger(req.user.id,"exit",req.body.pageName);
+  }
+});
+
+//this is the server side data logger for writing a user's action into their csv file in their datasets folder
+function dataLogger(user_id, event_action,event_detail = "",event_notes = "") {
+
+  if ( (isNaN(user_id)) || (!fs.existsSync("./public/datasets/user"+user_id))) {
+    console.log("error when data logger is checking for user id or user datasets folder validity");
+    return;
+  }
+  const browsingDataWriter = createCsvWriter({
+    path:'public/datasets/user'+user_id+'/navigationData_user'+user_id+".csv",
+    header: [
+      {id:'time',title:'Time (UTC)'},
+      {id:'action',title:'Action'},
+      {id:'detail',title:'Detail'},
+      {id:'notes',title:'Notes'},
+    ],
+    append: true
+  });
+  let currentdate = new Date();
+  detailedDateTime = currentdate.getUTCDate() + "_" + (currentdate.getUTCMonth()+1)  + "_" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
+  let data = [
+    {
+      time: detailedDateTime,
+      action: event_action,
+      detail: event_detail,
+      notes: event_notes
+    }
+  ];
+  browsingDataWriter.writeRecords(data).then(()=>{
+    console.log("successfully created navigationData csv and recorded down sign up time.");
+  });
+}
 
 function alreadyLoggedIn(req, res, next) {
   if (req.isAuthenticated()) { // if for some reason the user goes to login or signup
@@ -1717,16 +1796,12 @@ io.on('connection', function(socket){
     });
   });
 
+/*-----------------------------------------------------------------------------------------
   // for /tag trajectory data collection when user SUBMITS
-  socket.on('createTagSubmittedTrajectory', function(data){
-    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" ) {
-      console.log("something is wrong with trajectory tracking id or picname")
-      return;
-    }
-    //data is an object with 2 attributes in the format of 
+  //data is an object with 2 attributes in the format of 
     /*
     {
-      info: {id: , pic: },
+      info: {id: INT, pic: STR, timeStamp: STR},
       data: [{
         time:
         pitch:
@@ -1740,8 +1815,14 @@ io.on('connection', function(socket){
       }, ...]
     }
     */
+  socket.on('createTagSubmittedTrajectory', function(data){
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
+      console.log("something is wrong with trajectory tracking id or picname")
+      return;
+    }
+
     console.log("TAG SUBMITTED, RECORDING DOWN DATA RN.");
-    let filename = "submittedTrajectory_user"+data.info.id + "_" + data.info.pic+".csv";
+    let filename = "trajectory_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
     let filepath = "./public/datasets/user"+data.info.id;
     if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
       console.log(data.data);
@@ -1754,6 +1835,7 @@ io.on('connection', function(socket){
           {id:'pitch',title:'pitch'},
           {id:'yaw',title:'yaw'},
           {id:'hfov',title:'hfov'},
+          {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
         ],
       });
 
@@ -1769,12 +1851,12 @@ io.on('connection', function(socket){
 
   // for /tag trajectory data collection when user DOES NOT SUBMIT
   socket.on('createTagUnsubmittedTrajectory', function(data){
-    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" ) {
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
       console.log("something is wrong with trajectory tracking id or picname")
       return;
     }
     console.log("TAG NOT SUBMITTED, RECORDING DOWN DATA RN.");
-    let filename = "unsubmittedTrajectory_user"+data.info.id + "_" + data.info.pic;
+    let filename = "trajectory_unsubmitted_user"+data.info.id + "_" + data.info.pic;
     let repeat = 0;
     let filepath = "./public/datasets/user"+data.info.id;
 
@@ -1795,6 +1877,7 @@ io.on('connection', function(socket){
               {id:'pitch',title:'pitch'},
               {id:'yaw',title:'yaw'},
               {id:'hfov',title:'hfov'},
+              {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
             ],
           });
 
@@ -1817,6 +1900,131 @@ io.on('connection', function(socket){
       createFile();
     }
   });
+
+  /*------------------------------------------------------------------------------------*/ 
+  //data is an object with 2 attributes in the format of 
+    /*
+    {
+      info: {id: INT, pic: STR, timeStamp: STR},
+      data: [{
+        time:
+        action:
+        description:
+        action_pitch:
+        action_yaw:
+        viewer_center_pitch:
+        viewer_center_yaw:
+        viewer_hfov:
+      }, {
+        time:
+        action:
+        ...
+        ...
+      }, ...]
+    }
+    */
+
+  // for /tag event data collection when user SUBMITS
+  socket.on('createTagSubmittedEvent', function(data){
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
+      console.log("something is wrong with trajectory tracking id or picname or timestamp");
+      return;
+    }
+
+    console.log("TAG SUBMITTED, RECORDING DOWN EVENTS RN.");
+    let filename = "event_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
+    let filepath = "./public/datasets/user"+data.info.id;
+    if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
+      console.log(data.data);
+      console.log("\n"+ typeof(data.data));
+
+      const surveyCsvWriter = createCsvWriter({
+        path: "public/datasets/user"+data.info.id+"/"+filename,
+        header: [
+          {id:'time',title:'time'},
+          {id:'action',title:'action'},
+          {id:'description',title:'description'},
+          {id:'action_pitch',title:'action_pitch'},
+          {id:'action_yaw',title:'action_yaw'},
+          {id:'viewer_center_pitch',title:'viewer_center_pitch'},
+          {id:'viewer_center_yaw',title:'viewer_center_yaw'},
+          {id:'viewer_hfov', title:'viewer_hfov'},
+          {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
+        ],
+      });
+
+      surveyCsvWriter.writeRecords(data.data).then(() => {
+        console.log('Data has been collected for a user submitted event');
+      }, (err) => {
+        console.log('ERROR WHEN COLLECTING DATA BY A USER SUBMITTED EVENT');
+        console.log(err);
+      });
+    }
+  });
+
+  //for /tag event collection when user does not submit
+  socket.on('createTagUnsubmittedEvent', function(data){
+    if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" ) {
+      console.log("something is wrong with trajectory tracking id or picname")
+      return;
+    }
+    console.log("TAG NOT SUBMITTED, RECORDING DOWN EVENT RN.");
+    let filename = "event_unsubmitted_user"+data.info.id + "_" + data.info.pic;
+    let repeat = 0;
+    let filepath = "./public/datasets/user"+data.info.id;
+
+    const maxRepeat = 10; //number of files we'd store for unsubmitted attempts, set to -1 for no limit
+
+    if (fs.existsSync(filepath)) { //if folder exists
+      console.log("folder exists!");
+      let createFile = function FileRecursion() {
+        console.log("recursion running");
+        if (!fs.existsSync(filepath+"/"+filename+"_attempt"+repeat+".csv") ) { //if the file does not exist
+          console.log(data.data);
+          console.log("\n"+ typeof(data.data));
+
+          const surveyCsvWriter = createCsvWriter({
+            path: "public/datasets/user"+data.info.id+"/"+filename+"_attempt"+repeat+".csv",
+            header: [
+              {id:'time',title:'time'},
+              {id:'action',title:'action'},
+              {id:'description',title:'description'},
+              {id:'action_pitch',title:'action_pitch'},
+              {id:'action_yaw',title:'action_yaw'},
+              {id:'viewer_center_pitch',title:'viewer_center_pitch'},
+              {id:'viewer_center_yaw',title:'viewer_center_yaw'},
+              {id:'viewer_hfov', title:'viewer_hfov'},
+              {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
+            ],
+          });
+
+          surveyCsvWriter.writeRecords(data.data).then(() => {
+            console.log('Data has been collected for a user not submitted event');
+          }, (err) => {
+            console.log('ERROR WHEN COLLECTING DATA BY A USER NOT SUBMITTED EVENT');
+            console.log(err);
+          });
+        } else { //if the file does exists AKA not the first time user does not submit his results.
+          if (maxRepeat == -1 || repeat < maxRepeat) {
+            repeat += 1;
+            FileRecursion();
+          } else {
+            console.log("bruh");
+            return;
+          }
+        }
+      }
+      createFile();
+    }
+  });
+
+  //for dataLogger socket method
+  socket.on('dataLogger', function(data){
+    //data: [id,action,details,notes]
+    console.log('poggers, we on socket datalogger');
+    dataLogger(data[0],data[1],data[2],data[3]);
+  });
+
 });
 
 http.listen(8080, function(){
