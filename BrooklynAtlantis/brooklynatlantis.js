@@ -1663,7 +1663,7 @@ function dataLogger(user_id, event_action,event_detail = "",event_notes = "") {
     append: true
   });
   let currentdate = new Date();
-  detailedDateTime = currentdate.getUTCDate() + "_" + (currentdate.getUTCMonth()+1)  + "_" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds();
+  detailedDateTime = currentdate.getUTCDate() + "_" + (currentdate.getUTCMonth()+1)  + "_" + currentdate.getUTCFullYear() + " @ "  + currentdate.getUTCHours() + ":"  + currentdate.getUTCMinutes() + ":" + currentdate.getUTCSeconds() + ":" + currentdate.getUTCMilliseconds();
   let data = [
     {
       time: detailedDateTime,
@@ -1848,7 +1848,85 @@ io.on('connection', function(socket){
       }, ...]
     }
     */
-  socket.on('createTagSubmittedTrajectory', function(data){
+  socket.on('createTagSubmitted', function(socketData){
+    let dataObject = socketData.data; //trajectory
+    let specialDataObject = socketData.specialData; //event
+
+    function trajectory(data) {
+      if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
+        console.log("something is wrong with trajectory tracking id or picname")
+        return;
+      }
+  
+      console.log("TAG SUBMITTED, RECORDING DOWN DATA RN.");
+      let filename = "trajectory_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
+      let filepath = "./public/datasets/user"+data.info.id;
+      if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
+        //console.log(data.data);
+        console.log("\n"+ typeof(data.data));
+  
+        const surveyCsvWriter = createCsvWriter({
+          path: "public/datasets/user"+data.info.id+"/"+filename,
+          header: [
+            {id:'time',title:'time'},
+            {id:'pitch',title:'pitch'},
+            {id:'yaw',title:'yaw'},
+            {id:'hfov',title:'hfov'},
+            {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
+          ],
+        });
+  
+        surveyCsvWriter.writeRecords(data.data).then(() => {
+          console.log('Data has been collected for a user submitted trajectory');
+        }, (err) => {
+          console.log('ERROR WHEN COLLECTING DATA BY A USER SUBMITTED TRAJECTORY');
+          console.log(err);
+        });
+      } 
+    }
+
+    function event(data) {
+      if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
+        console.log("something is wrong with trajectory tracking id or picname or timestamp");
+        return;
+      }
+  
+      console.log("TAG SUBMITTED, RECORDING DOWN EVENTS RN.");
+      let filename = "event_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
+      let filepath = "./public/datasets/user"+data.info.id;
+      if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
+        //console.log(data.data);
+        console.log("\n"+ typeof(data.data));
+  
+        const surveyCsvWriter = createCsvWriter({
+          path: "public/datasets/user"+data.info.id+"/"+filename,
+          header: [
+            {id:'time',title:'time'},
+            {id:'action',title:'action'},
+            {id:'description',title:'description'},
+            {id:'action_pitch',title:'action_pitch'},
+            {id:'action_yaw',title:'action_yaw'},
+            {id:'viewer_center_pitch',title:'viewer_center_pitch'},
+            {id:'viewer_center_yaw',title:'viewer_center_yaw'},
+            {id:'viewer_hfov', title:'viewer_hfov'},
+            {id:'not_usable', title:"user"+data.info.id+"_"+data.info.pic + "_" + data.info.timeStamp}
+          ],
+        });
+  
+        surveyCsvWriter.writeRecords(data.data).then(() => {
+          console.log('Data has been collected for a user submitted event');
+        }, (err) => {
+          console.log('ERROR WHEN COLLECTING DATA BY A USER SUBMITTED EVENT');
+          console.log(err);
+        });
+      }
+    }
+    trajectory(dataObject);
+    event(specialDataObject);
+    dataLogger(dataObject.info.id,'exit','tag','tag submitted for ' + dataObject.info.pic);
+
+  });
+  /*socket.on('createTagSubmittedTrajectory', function(data){
     if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
       console.log("something is wrong with trajectory tracking id or picname")
       return;
@@ -1858,7 +1936,7 @@ io.on('connection', function(socket){
     let filename = "trajectory_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
     let filepath = "./public/datasets/user"+data.info.id;
     if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
-      console.log(data.data);
+      //console.log(data.data);
       console.log("\n"+ typeof(data.data));
 
       const surveyCsvWriter = createCsvWriter({
@@ -1880,7 +1958,7 @@ io.on('connection', function(socket){
       });
 
     }
-  });
+  }); */
 
   // for /tag trajectory data collection when user DOES NOT SUBMIT
   socket.on('createTagUnsubmittedTrajectory', function(data){
@@ -1900,7 +1978,7 @@ io.on('connection', function(socket){
       let createFile = function FileRecursion() {
         console.log("recursion running");
         if (!fs.existsSync(filepath+"/"+filename+"_attempt"+repeat+".csv") ) { //if the file does not exist
-          console.log(data.data);
+          //console.log(data.data);
           console.log("\n"+ typeof(data.data));
 
           const surveyCsvWriter = createCsvWriter({
@@ -1958,6 +2036,7 @@ io.on('connection', function(socket){
     */
 
   // for /tag event data collection when user SUBMITS
+  /*
   socket.on('createTagSubmittedEvent', function(data){
     if (typeof(data.info.id) != "number" || typeof(data.info.pic) != "string" || typeof(data.info.timeStamp) != "string") {
       console.log("something is wrong with trajectory tracking id or picname or timestamp");
@@ -1968,7 +2047,7 @@ io.on('connection', function(socket){
     let filename = "event_submitted_user"+data.info.id + "_" + data.info.pic + ".csv";
     let filepath = "./public/datasets/user"+data.info.id;
     if (fs.existsSync(filepath) && !fs.existsSync(filepath+"/"+filename) ) { //if the folder for the user exists and the submitted data has not been established already
-      console.log(data.data);
+      //console.log(data.data);
       console.log("\n"+ typeof(data.data));
 
       const surveyCsvWriter = createCsvWriter({
@@ -1993,7 +2072,7 @@ io.on('connection', function(socket){
         console.log(err);
       });
     }
-  });
+  }); */
 
   //for /tag event collection when user does not submit
   socket.on('createTagUnsubmittedEvent', function(data){
@@ -2013,7 +2092,7 @@ io.on('connection', function(socket){
       let createFile = function FileRecursion() {
         console.log("recursion running");
         if (!fs.existsSync(filepath+"/"+filename+"_attempt"+repeat+".csv") ) { //if the file does not exist
-          console.log(data.data);
+          //console.log(data.data);
           console.log("\n"+ typeof(data.data));
 
           const surveyCsvWriter = createCsvWriter({

@@ -395,9 +395,12 @@
     <!-- Socket Stuff-->
     <script src="/socket.io/socket.io.js"></script> 
     <script>
-      var socket = io.connect('http://127.0.0.1:8080')
+      var opts  = {};
+      opts['sync disconnect on unload'] = false;
+
+      var socket = io.connect('http://127.0.0.1:8080',opts);
       socket.on('connect',function(data){
-        socket.emit('join','Hello world from client.');
+        socket.emit('join','Hello world from tagging page.');
       });
 
       socket.on('messages', function(data){
@@ -456,7 +459,13 @@
 
 
       });
-
+      function waitMs(ms) {
+        var start = Date.now()
+        var now = start;
+        while(now - start < ms){
+            now = Date.now()
+        }  
+      }
       window.onbeforeunload = function() {
         if (dataList.length > 0) {
           let dataObject = {
@@ -468,16 +477,23 @@
             info: fileInfo,
             data: specialDataList
           }
+
+          let myObject = {
+            data: dataObject,
+            specialData: specialDataObject
+          }
           if (submitted == true) {
-            socket.emit("createTagSubmittedTrajectory",dataObject);
-            socket.emit("createTagSubmittedEvent",specialDataObject);
+            socket.emit('createTagSubmitted',myObject);
+            //socket.emit("createTagSubmittedTrajectory",dataObject);
+            //socket.emit("createTagSubmittedEvent",specialDataObject);
           } else {
             if (v.getHSamount() > 0) {
-              return ("are you sure?")
+              return ("are you sure?");
             }
           }
         } 
       }
+
       window.onunload = function() {
         if (submitted == false && loaded == true) {
           let dataObject = {
@@ -495,6 +511,7 @@
         }
         socket.emit('dataLogger', [<%- id %>, "exit", "tag", "<%- pic %>"]);
 
+        
       }
 
       //speical data handling
