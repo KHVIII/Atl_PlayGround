@@ -358,8 +358,8 @@ function(req, email, password, done) {
           var currentdate = new Date(); 
           var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear();
           connection.query({
-            sql: "INSERT INTO userInfo (id, email, name, reg_date, recent_log_in) VALUES (?, ?, ?, ?, ?)",
-            values: [newUser.id, email, newUser.name, datetime, datetime]
+            sql: "INSERT INTO userInfo (id, email, gender, name, birthday, reg_date, recent_log_in) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            values: [newUser.id, email, req.body.pronoun, newUser.name, req.body.birthday, datetime, datetime]
           }, function(err, rows) {
             if (err) throw err;
           });
