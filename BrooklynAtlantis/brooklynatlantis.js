@@ -112,9 +112,9 @@ const { transformAuthInfo } = require('passport');
 // This is needed to allow the website itself to log in to 
 // the MYSQL database
 var db_config = {
- host: '127.0.0.1',
- user: 'root',
- password: 'atlantis2020',
+ host: '128.238.25.39',
+ user: 'ba_server',
+ password: 'jaw021HB$n)',
  database: 'Eager',
 };
 
