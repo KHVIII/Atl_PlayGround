@@ -398,7 +398,7 @@
       var opts  = {};
       opts['sync disconnect on unload'] = false;
 
-      var socket = io.connect('http://127.0.0.1:8080',opts);
+      var socket = io.connect(window.location.host,opts);
       socket.on('connect',function(data){
         socket.emit('join','Hello world from tagging page.');
       });
@@ -517,7 +517,7 @@
       //speical data handling
       var specialDataList = [];
 
-      if ('<%= pic %>' == 'img4') {
+      if ('<%= pic %>' == 'img4' && <%= survey_completion %> == 0) {
         $('#surveyModal').modal({
           backdrop: 'static'
         });

@@ -55,6 +55,7 @@ var bodyParser       = require('body-parser');
 //	mysql database module 
 var mysql            = require('mysql');
 
+/*
 var mySQLStore = require('connect-mysql')(session),
     sqlStoreOptions = {
       config: {
@@ -65,6 +66,7 @@ var mySQLStore = require('connect-mysql')(session),
       cleanup: true
     };
 var sessionStore = new mySQLStore(sqlStoreOptions);
+*/
 
 // Password hashing utilities
 var bcrypt           = require('bcrypt-nodejs');
@@ -111,12 +113,22 @@ const e = require('express');
 const { transformAuthInfo } = require('passport');
 // This is needed to allow the website itself to log in to 
 // the MYSQL database
+
 var db_config = {
  host: '128.238.25.39',
  user: 'ba_server',
  password: 'jaw021HB$n)',
  database: 'Eager',
 };
+
+/*
+var db_config = {
+ host: 'localhost',
+ user: 'root',
+ password: 'atlantis2020',
+ database: 'Eager',
+};*/
+
 
 var fb_config = {
   clientID     : '229260064152476',
@@ -258,6 +270,7 @@ app.use(session({
   }
 }));
 
+
 //app.use('/',        express.static(__dirname + '/booted'));
 //app.use('/old',     express.static(__dirname + '/newpub'));
 //app.use('/images',  express.static(__dirname + '/newpub/images'));
@@ -326,7 +339,7 @@ passport.use('local-signup', new LocalStrategy({
   passReqToCallback : true
 }, 
 function(req, email, password, done) {
-  //connection.connect();
+  
   connection.query({
     sql: "SELECT * FROM `auth` WHERE `email` = ? OR 'name' = ?",
     values: [email, req.body.name]
@@ -353,8 +366,9 @@ function(req, email, password, done) {
             values: [email, newUser.password, newUser.name]
         }, function(err, rows) {
           if (err) throw err;
+          //set up req.user id, this is the same id they will have in the database
           newUser.id = rows.insertId;
-          //connection.end();'
+          
           var currentdate = new Date(); 
           var datetime = currentdate.getUTCDate() + "/" + (currentdate.getUTCMonth()+1)  + "/" + currentdate.getUTCFullYear();
           connection.query({
@@ -559,13 +573,10 @@ app.get('/', function(req, res) {
   }
 });
 
-// First string sprcifies the target of the
-// request
 
 
 
-
-
+//this is callback for us, not the browser default callback.
 app.get('/callback', function(req, res) {
   res.redirect(req.session.lastPage || '/index'); //go to the last page, if no last page recorded for some reason, we default to going to About page. 
 });
@@ -691,6 +702,7 @@ app.get('/tag', mustBeLoggedIn, function(req, res) { //this will be the 'TAG' Pa
           auth: req.isAuthenticated(),
           page: 0,
           pic: curr_pic_name,
+          survey_completion: rows[0].survey_completion,
           errmsg: req.flash('err'),
           id: req.user.id
         });
@@ -1121,8 +1133,6 @@ app.get('/profile', mustBeLoggedIn, function(req, res) {
       return(err);
     //no error, load the page with user uploaded picture, if no pictures were uploaded, the value for pic will be 'default.jpg'
     } else {
-      delete rows[0]['id'];
-      delete rows[0]['email'];
       let profile_pic = rows[0].profile_picture;
       delete rows[0].profile_picture;
       console.log(rows[0]);
@@ -1526,6 +1536,8 @@ app.post('/survey', function(req, res) {
       getresult: req.body.getresult? 1:0,
       futurehelp:req.body.futurehelp? 1:0
     }*/
+
+    //this is the part where we write to the csv, surveyCsvWriter is set up at the start
     surveyCsvWriter
       .writeRecords([{
         id: req.user.id,
@@ -1537,6 +1549,7 @@ app.post('/survey', function(req, res) {
       }])
       .then(()=> console.log('boom, survey written'));
 
+    
     dataLogger(req.user.id,"survey_completion");
     /*
     connection.query({
@@ -1554,7 +1567,17 @@ app.post('/survey', function(req, res) {
     });*/
 
   });
-  res.redirect('/tag');
+  connection.query({
+    sql: "UPDATE userInfo SET survey_completion = 1 WHERE id = ?",
+    values: [req.user.id]
+  }, function(err, rows){
+    if (err) {
+      console.log('Error when userInfo recording down survey_completion: ' + err);
+      return (err);
+    } else {
+      res.redirect('/tag');
+    }
+  })
 });
 
 app.post('/platform', function(req, res) {
@@ -1645,6 +1668,12 @@ app.post('/exitDataLogger', function(req,res){
   }
 });
 
+
+//catching all invalid routes and redirecting them to /
+app.get('*', function(req,res){
+  res.redirect('/');
+})
+
 //this is the server side data logger for writing a user's action into their csv file in their datasets folder
 function dataLogger(user_id, event_action,event_detail = "",event_notes = "") {
 
@@ -1679,7 +1708,7 @@ function dataLogger(user_id, event_action,event_detail = "",event_notes = "") {
 
 function alreadyLoggedIn(req, res, next) {
   if (req.isAuthenticated()) { // if for some reason the user goes to login or signup
-    res.redirect('/index');    // while logged in already, take them to the homepage
+    res.redirect('/');    // while logged in already, take them to the homepage
   }
   else
     return next();
@@ -1697,39 +1726,8 @@ function mustBeLoggedIn(req, res, next) {
   res.redirect('/login');
 }
 
-function hasNotCompleted(req, res, next) {
-  connection.query({
-    sql: "SELECT * FROM experiment WHERE id = ?",
-    values: req.user.id
-  }, function(err, rows) {
-    if (err) throw err;
 
-    if (!rows[0].consent) {
-      req.flash('err', "In order to continue with the experiment, please agree to the terms of consent listed below.");
-      res.redirect('/consent_form');
-    }
-    else if (DEV) {
-      return next();
-    }
-    else if (!rows[0].finished) { // if the user has hasn't completed the experiment, carry on
-      return next();
-    }
-    else if (!rows[0].survey) { // if they have, if they haven't done the survey, redirect them to the survey page
-      res.redirect('/survey'); 
-    }
-    else { // if they have done the survey, redirect them to the thanks page
-      res.redirect('/thanks');
-    }
-  });
-}
 
-var trueAnswers = ["no_threat","no_threat","no_threat",
-  "no_threat","no_threat","threat","no_threat","threat",
-  "no_threat","no_threat","threat","threat","no_threat",
-  "threat","threat","no_threat","no_threat","no_threat",
-  "no_threat","no_threat","threat","no_threat","no_threat",
-  "threat","no_threat","threat","no_threat","threat",
-  "threat","no_threat","no_threat"];
 
 /*
 io.use(passportSocketIO.authorize({
@@ -1764,6 +1762,8 @@ function onAuthorizeFail(data, message, error, accept){
   // see: http://socket.io/docs/client-api/#socket > error-object
 } 
 */
+
+
 
 io.on('connection', function(socket){
   console.log('a user connected');

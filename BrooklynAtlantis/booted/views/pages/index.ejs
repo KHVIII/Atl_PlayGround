@@ -63,7 +63,7 @@
     <% if (id != -1) { %>
       <script src="/socket.io/socket.io.js"></script> 
       <script>
-          var socket = io.connect('http://127.0.0.1:8080');
+          var socket = io.connect(window.location.host);
           socket.on('connect',function(data){
               socket.emit('join','Hello world from about. ');
           });
