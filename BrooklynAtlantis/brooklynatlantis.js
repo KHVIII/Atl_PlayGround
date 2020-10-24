@@ -344,8 +344,10 @@ function(req, email, password, done) {
     sql: "SELECT * FROM `auth` WHERE `email` = ? OR 'name' = ?",
     values: [email, req.body.name]
   }, function(err, rows) {
-      if (err)
+      if (err) {
+        console.log('Error when local-signup: ' + err);
         return done(err);
+      }
 
       if (rows[0]){ //user exists
         if (rows[0].name == req.body.name) {
@@ -427,9 +429,10 @@ passport.use('local-login', new LocalStrategy({
       values: [email]
     }, function(err, rows) {
       //connection.end();
-      if (err)
+      if (err) {
+        console.log('Error when local-login: ' + err);
         return done(err);
-
+      }
       if (!rows.length)
         return done(null, false, req.flash('err', 'No user found.'));
 
@@ -470,6 +473,7 @@ passport.use('local-login', new LocalStrategy({
 
 //TO DO - this is not mine (AT) - I think we should 
 // drop the facebook login for now
+/*
 passport.use(new FacebookStrategy(fb_config,
   function(req, token, refreshToken, profile, done) {
     process.nextTick(function() {
@@ -554,7 +558,7 @@ passport.use(new FacebookStrategy(fb_config,
       });
     });
   }));
-
+*/
 
 //initialize passport
 app.use(passport.initialize());
