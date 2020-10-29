@@ -59,8 +59,9 @@ var mysql            = require('mysql');
 var mySQLStore = require('connect-mysql')(session),
     sqlStoreOptions = {
       config: {
-        user: 'root',
-        password: 'atlantis2020',
+        host: '128.238.25.39',
+        user: 'ba_server',
+        password: 'jaw021HB$n)',
         database: 'Eager'
       },
       cleanup: true
@@ -119,6 +120,9 @@ var db_config = {
  user: 'ba_server',
  password: 'jaw021HB$n)',
  database: 'Eager',
+ acquireTimeout: 25000,
+ connectionLimit: 20
+
 };
 
 /*
@@ -158,7 +162,7 @@ connection = {
 		// 		https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
 		// and call will redirect this to whatever was supplied by the arguments,
 		//		https://stackoverflow.com/questions/7056925/how-does-array-prototype-slice-call-work
-		// So basically this part allows to run slice on an arbitrary iterable from an arbitrary point
+    // So basically this part allows to run slice on an arbitrary iterable from an arbitrary point
         var queryArgs = Array.prototype.slice.call(arguments),
 			// Array
             events = [],
@@ -168,20 +172,23 @@ connection = {
         pool.getConnection(function (err, conn) {
             if (err) {
 				// I suspect this will execute code corresponding
-				// to various custom error types
+        // to various custom error types
+                console.log('getting connection from pool error: ' + err);
                 if (eventNameIndex.error) {
                     eventNameIndex.error();
                 }
             }
-			// If no error
+      // If no error
             if (conn) {
 				// Run connection.query() with queryArgs applied on conn
 				// This is supposed to just use the connection in some way
-				// Basically run query() with queryArgs and this pointing to conn
+        // Basically run query() with queryArgs and this pointing to conn
+                console.log('pool connection gotten');
                 var q = conn.query.apply(conn, queryArgs);
                 q.on('end', function () {
-					// Release connection back to the pool
-                    conn.release();
+          // Release connection back to the pool
+                    conn.destroy();
+                    console.log('pool connection released');
                 });
 				// Run the function on every element in events,
 				// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
@@ -191,6 +198,7 @@ connection = {
                     q.on.apply(q, args);
                 });
             }
+            
         });
 		// Returns an object made on a spot with a member on that is a function
         return {
@@ -206,6 +214,15 @@ connection = {
     }
 };
 
+/*
+function keepAlive() {
+  console.log('staying alive');
+  pool.getConnection(function(err,connection){
+    if (err) {return;}
+  })
+}*/
+
+/*
 function handleDisconnect() {
   connection = mysql.createConnection(db_config);
 
@@ -233,6 +250,7 @@ setTimeout(function() {
 }, 5000);
 
 handleDisconnect();
+*/
 
 // app.use - binding application-level middleware to app object
 // https://expressjs.com/en/guide/using-middleware.html
@@ -258,8 +276,9 @@ app.use(session({
   //store: sessionStore,
   // Cookie settings (one cookie per user)
   cookie: {
-	// This means the cookie will be kept for a week
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+	// This means the cookie will be kept for a day
+    maxAge: 24 * 60 * 60 * 1000,
+    //maxAge: 60*1000, //one minute
 	// This cookie is only available for the server
 	// https://latesthackingnews.com/2017/07/03/what-is-httponly-cookie/
     httpOnly: true,
@@ -291,6 +310,11 @@ app.use('/socket.io',express.static(__dirname + '/node_modules/socket.io'))
 app.set('views',    path.join(__dirname, '/booted/views'));  //app.get now gets the templates from this directory. 
 app.set('view engine', 'ejs'); //app.get now only needs name of the file (ejs file)
 
+
+//initialize passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // To maintain a session with user ceedentials through cookies
 // here only by storing the user ID
 // http://www.passportjs.org/docs/configure/
@@ -307,13 +331,19 @@ passport.deserializeUser(function(id, done) {
   //connection.connect();
   // Find in the database
   // https://www.w3schools.com/nodejs/nodejs_mysql_select.asp
+  console.log('am deserializing user with id: ' + id);
   connection.query({
     sql: "SELECT * FROM auth WHERE id = ?",
     values: [id]
   }, function(err, rows) {
     //connection.end();
 	// More generic form of js object
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object
+    if (err) {
+     // done(err);
+     console.log('Error while deserializing: ' + err);
+     done(err);
+    }
     var user = new Object();
     user.id = rows[0].id;
     user.email = rows[0].email;
@@ -470,6 +500,23 @@ passport.use('local-login', new LocalStrategy({
     });
 }));
 
+//error catcher / handler
+app.use(function(err,req,res,next){
+  if (err) {
+    console.log('error detected');
+    req.logout();
+    console.log('logged out cuz error');
+    if (req.originalUrl == "/login") {
+      console.log('originalurl is login, so we go next');
+      next();
+    } else {
+      console.log("originalurl is not login, so we go login");
+      req.redirect('/login');
+    }
+  } else {
+    next();
+  }
+})
 
 //TO DO - this is not mine (AT) - I think we should 
 // drop the facebook login for now
@@ -560,9 +607,6 @@ passport.use(new FacebookStrategy(fb_config,
   }));
 */
 
-//initialize passport
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Functions that describe responses to
 // clients usage of the browser
@@ -806,6 +850,7 @@ app.post('/tag', mustBeLoggedIn, function(req,res) {
 //------------------------------------------------------------------------LOGIN, SIGNUP, and LOGOUT
 
 app.get('/login', alreadyLoggedIn, function(req, res) {
+  req.session.lastPage = '/login';
   res.render('pages/login', {
     auth: req.isAuthenticated(),
     errmsg: req.flash('err'),
