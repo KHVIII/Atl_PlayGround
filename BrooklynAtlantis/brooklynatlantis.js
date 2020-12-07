@@ -59,9 +59,9 @@ var mysql            = require('mysql');
 var mySQLStore = require('connect-mysql')(session),
     sqlStoreOptions = {
       config: {
-        host: '128.238.25.39',
-        user: 'ba_server',
-        password: 'jaw021HB$n)',
+        host: '127.0.0.1',
+        user: 'root',
+        password: ')',
         database: 'Eager'
       },
       cleanup: true
@@ -116,9 +116,9 @@ const { transformAuthInfo } = require('passport');
 // the MYSQL database
 
 var db_config = {
- host: '128.238.25.39',
- user: 'ba_server',
- password: 'jaw021HB$n)',
+ host: '127.0.0.1',
+ user: 'root',
+ password: ')',
  database: 'Eager',
  acquireTimeout: 25000,
  connectionLimit: 20
@@ -135,8 +135,8 @@ var db_config = {
 
 
 var fb_config = {
-  clientID     : '229260064152476',
-  clientSecret : '57b4f20cb7baa069e67171fb752e10e6',
+  clientID     : '123456789',
+  clientSecret : 'secret',
   callbackURL  : 'http://cb.engineering.nyu.edu/auth/facebook/callback',
   passReqToCallback: true,
   profileFields: ['id', 'emails', 'name']
@@ -268,7 +268,7 @@ app.use(bodyParser.urlencoded({limit: "50mb", extended: false }));
 // https://github.com/expressjs/session
 app.use(session({
   // String used to compute the hash
-  secret: 'c813be3ca54af9bb3328e6e7212024a4fa627d15bd138de2ef78a32b7163db4f',
+  secret: 'supersecret',
   // If the session was not modified, don't save it back to the session store 
   resave: false,
   // Do not save a new session that was not modified
@@ -961,7 +961,7 @@ app.post('/forgot', function(req, res, next) {
         service: 'gmail',
         auth: {
           user: 'BrooklynAtlantisRecovery@gmail.com',
-          pass: 'Sugarelephant@213240'
+          pass: 'ASK TIM FOR PASSWORD'
         }
       });
       var mailOptions = { //edit mailing content and receiver
